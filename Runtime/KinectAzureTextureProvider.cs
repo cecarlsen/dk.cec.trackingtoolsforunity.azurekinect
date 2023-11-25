@@ -215,7 +215,7 @@ namespace TrackingTools
 			_renderDepthTextureMaterial.SetBuffer( ShaderIDs._DepthMap, sensorData.depthImageBuffer );
 			Graphics.Blit( null, _depthTexture, _renderDepthTextureMaterial );
 
-			if( _undistortDepth || _flipDepth){
+			if( _undistortDepth || _flipDepth ){
 				if( !_processedDepthTexture ){
 					_processedDepthTexture = new RenderTexture( _depthTexture.width, _depthTexture.height, 0, _depthTexture.graphicsFormat );
 					_processedDepthTexture.name = "KinectDepthProcessed";
@@ -232,7 +232,7 @@ namespace TrackingTools
 				_flipper.Flip( _depthTexture, _processedDepthTexture );
 			}
 
-			_depthTextureEvent.Invoke( _undistortDepth ? _processedDepthTexture : _depthTexture );
+			_depthTextureEvent.Invoke( _undistortDepth || _flipDepth ? _processedDepthTexture : _depthTexture );
 
 			_lastDepthFrameTime = sensorData.lastDepthFrameTime;
 		}
