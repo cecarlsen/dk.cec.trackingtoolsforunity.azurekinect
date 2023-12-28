@@ -16,5 +16,8 @@
       "description": "All samples.",
       "path": "Samples~"
     }
-  ]
+  ],
+  "dependencies": {
+    "dk.cec.trackingtoolsforunity": ""
+  }
 }
