@@ -15,7 +15,7 @@ using OpenCVForUnity.UtilsModule;
 using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.Calib3dModule;
 
-namespace TrackingTools
+namespace TrackingTools.AzureKinect
 {
 	public class KinectAzureTexture2DProvider : MonoBehaviour
 	{

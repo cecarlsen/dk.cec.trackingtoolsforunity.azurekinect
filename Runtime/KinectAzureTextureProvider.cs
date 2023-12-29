@@ -9,11 +9,16 @@ using com.rfilkov.kinect;
 using UnityEngine.Experimental.Rendering;
 using System;
 
-namespace TrackingTools
+namespace TrackingTools.AzureKinect
 {
 	public class KinectAzureTextureProvider : MonoBehaviour
 	{
 		[SerializeField] int _sensorId = 0;
+
+		[Header("State")]
+		public bool colorEnabled = true;
+		public bool irEnabled = true;
+		public bool depthEnabled = true;
 
 		[Header("Processing")]
 		[SerializeField] bool _flipColor = false;
@@ -22,35 +27,38 @@ namespace TrackingTools
 		[SerializeField] bool _undistortDepth = false;
 		[SerializeField] bool _flipDepth = false;
 
-		[Header("Update Overrides")]
-		public bool updateColor = true;
-		public bool updateIR = true;
-		public bool updateDepth = true;
-
 		[Header("Output")]
 		[SerializeField] UnityEvent<Texture> _colorTextureEvent = new UnityEvent<Texture>();
 		[SerializeField] UnityEvent<Texture> _irTextureEvent = new UnityEvent<Texture>();
 		[SerializeField] UnityEvent<Texture> _depthTextureEvent = new UnityEvent<Texture>();
 
-		bool _colorEnabled;
-		bool _irEnabled;
-		bool _depthEnabled;
+		ulong _latestIRFrameTime;
+		ulong _latestColorFrameTime;
+		ulong _latestDepthFrameTime;
 
-		ulong _lastIRFrameTime;
-		ulong _lastColorFrameTime;
-		ulong _lastDepthFrameTime;
-		
+		bool _wasColorUpdatedThisFrame;
+		bool _wasIRUpdatedThisFrame;
+		bool _wasDepthUpdatedThisFrame;
+
 		Material _renderDepthTextureMaterial;
 
 		RenderTexture _processedColorTexture;
 		RenderTexture _processedIRTexture;
 		RenderTexture _depthTexture, _processedDepthTexture;
 
+		Texture _latestColorTexture;
+		Texture _latestIRTexture;
+		Texture _latestDepthTexture;
+
 		Texture2D _irTexture;
 		byte[] _rawImageDataBytes;
 
 		LensUndistorter _depthLensUndistorter;
 		Flipper _flipper;
+
+		public bool wasColorUpdatedThisFrame => _wasColorUpdatedThisFrame;
+		public bool wasIRUpdatedThisFrame => _wasIRUpdatedThisFrame;
+		public bool wasDepthUpdatedThisFrame => _wasDepthUpdatedThisFrame;
 
 
 		static class ShaderIDs
@@ -64,12 +72,32 @@ namespace TrackingTools
 		}
 
 
+		public Texture GetLatestColorTexture()
+		{
+			if( !colorEnabled ) throw new Exception( "Color was requested but not enabled" );
+
+			return _latestColorTexture;
+		}
+
+
+		public Texture GetLatestIRTexture()
+		{
+			if( !irEnabled ) throw new Exception( "Infrared was requested but not enabled" );
+
+			return _latestIRTexture;
+		}
+
+
+		public Texture GetLatestDepthTexture()
+		{
+			if( !depthEnabled ) throw new Exception( "Infrared was requested but not enabled" );
+
+			return _latestDepthTexture;
+		}
+
+
 		void Awake()
 		{
-			_colorEnabled = _colorTextureEvent != null && _colorTextureEvent.GetPersistentEventCount() > 0;
-			_irEnabled = _irTextureEvent != null && _irTextureEvent.GetPersistentEventCount() > 0;
-			_depthEnabled = _depthTextureEvent != null && _depthTextureEvent.GetPersistentEventCount() > 0;
-
 			Shader shader = Shader.Find( "KinectAzureTextureProvider/KinectDepthShader" );
 			_renderDepthTextureMaterial = new Material( shader );
 
@@ -85,21 +113,25 @@ namespace TrackingTools
 			KinectManager kinectManager = KinectManager.Instance;
 			if( !kinectManager || !kinectManager.IsInitialized() ) return;
 
-			if( _colorEnabled && kinectManager.getColorFrames == KinectManager.ColorTextureType.None ) kinectManager.getColorFrames = KinectManager.ColorTextureType.ColorTexture;
-			if( _irEnabled && kinectManager.getInfraredFrames != KinectManager.InfraredTextureType.None ) kinectManager.getInfraredFrames = KinectManager.InfraredTextureType.RawInfraredData;
-			if( _depthEnabled && kinectManager.getDepthFrames == KinectManager.DepthTextureType.None ) kinectManager.getDepthFrames = KinectManager.DepthTextureType.RawDepthData;
+			if( colorEnabled && kinectManager.getColorFrames == KinectManager.ColorTextureType.None ) kinectManager.getColorFrames = KinectManager.ColorTextureType.ColorTexture;
+			if( irEnabled && kinectManager.getInfraredFrames != KinectManager.InfraredTextureType.None ) kinectManager.getInfraredFrames = KinectManager.InfraredTextureType.RawInfraredData;
+			if( depthEnabled && kinectManager.getDepthFrames == KinectManager.DepthTextureType.None ) kinectManager.getDepthFrames = KinectManager.DepthTextureType.RawDepthData;
 
 			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( _sensorId );
 
-			if( updateColor && _colorEnabled ) UpdateColorTexture( kinectManager, sensorData );
-			if( updateIR && _irEnabled ) UpdateIRTexture( kinectManager, sensorData );
-			if( updateDepth && _depthEnabled ) UpdateDepthTexture( kinectManager, sensorData );
+			_wasColorUpdatedThisFrame = false;
+			_wasIRUpdatedThisFrame = false;
+			_wasDepthUpdatedThisFrame = false;
+
+			if( colorEnabled ) UpdateColorTexture( kinectManager, sensorData );
+			if( irEnabled ) UpdateIRTexture( kinectManager, sensorData );
+			if( depthEnabled ) UpdateDepthTexture( kinectManager, sensorData );
 		}
 
 
 		void UpdateColorTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
-			if( sensorData.lastColorFrameTime == _lastColorFrameTime ) return;
+			if( sensorData.lastColorFrameTime == _latestColorFrameTime ) return;
 
 			Texture colorTexture = kinectManager.GetColorImageTex( _sensorId );
 			colorTexture.wrapMode = TextureWrapMode.Repeat;
@@ -117,15 +149,17 @@ namespace TrackingTools
 				_flipper.Flip( colorTexture, _processedColorTexture );
 			}
 
-			_colorTextureEvent.Invoke( _flipColor ? _processedColorTexture : colorTexture );
+			_latestColorTexture = _flipColor ? _processedColorTexture : colorTexture;
+			_colorTextureEvent.Invoke( _latestColorTexture );
 
-			_lastColorFrameTime = sensorData.lastColorFrameTime;
+			_latestColorFrameTime = sensorData.lastColorFrameTime;
+			_wasColorUpdatedThisFrame = true;
 		}
 
 
 		void UpdateIRTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
-			if( sensorData.lastInfraredFrameTime == _lastIRFrameTime ) return;
+			if( sensorData.lastInfraredFrameTime == _latestIRFrameTime ) return;
 
 			// Azure Kinect Examples loads IR as RGB24, but the IR is actually R16, so we loose a lot of information.
 			// If you look IR in the official Azure Kinect Viewver it matches Azure Kinet Examples. They are very bright, and typically burned out.
@@ -144,7 +178,6 @@ namespace TrackingTools
 
 			// Get raw image data.
 			ushort[] rawImageData = kinectManager.GetRawInfraredMap( _sensorId );
-
 
 			// ushort[] to byte[].
 			// https://stackoverflow.com/questions/37213819/convert-ushort-into-byte-and-back
@@ -172,16 +205,19 @@ namespace TrackingTools
 				_flipper.Flip( _irTexture, _processedIRTexture );
 			}
 
+			_latestIRTexture = _undistortIR || _flipIR ? _processedIRTexture : _irTexture;
+			_irTextureEvent.Invoke( _latestIRTexture );
 
-			_irTextureEvent.Invoke( _undistortIR || _flipIR ? _processedIRTexture : _irTexture );
-
-			_lastIRFrameTime = sensorData.lastInfraredFrameTime;
+			_latestIRFrameTime = sensorData.lastInfraredFrameTime;
+			_wasIRUpdatedThisFrame = true;
 		}
 
 
 		void UpdateDepthTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
-			if( sensorData.lastDepthFrameTime == _lastDepthFrameTime ) return;
+			//Debug.Log( sensorData.startTimeOffset + " " + kinectManager.GetDepthFrameTime( 0 ) + " == " + sensorData.lastDepthFrameTime );
+
+			if( sensorData.lastDepthFrameTime == _latestDepthFrameTime ) return;
 
 			// Don't use AzureKinectExamples depth. It is RGB888 and encodes depth to two-color hue.
 			int w = kinectManager.GetDepthImageWidth( _sensorId );
@@ -232,9 +268,11 @@ namespace TrackingTools
 				_flipper.Flip( _depthTexture, _processedDepthTexture );
 			}
 
-			_depthTextureEvent.Invoke( _undistortDepth || _flipDepth ? _processedDepthTexture : _depthTexture );
+			_latestDepthTexture = _undistortDepth || _flipDepth ? _processedDepthTexture : _depthTexture;
+			_depthTextureEvent.Invoke( _latestDepthTexture );
 
-			_lastDepthFrameTime = sensorData.lastDepthFrameTime;
+			_latestDepthFrameTime = sensorData.lastDepthFrameTime;
+			_wasDepthUpdatedThisFrame = true;
 		}
 
 

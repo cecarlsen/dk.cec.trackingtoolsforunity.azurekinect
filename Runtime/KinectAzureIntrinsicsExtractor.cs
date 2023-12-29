@@ -5,35 +5,37 @@
 
 using UnityEngine;
 using com.rfilkov.kinect;
-using TrackingTools;
 
-public class KinectAzureIntrinsicsExtractor : MonoBehaviour
+namespace TrackingTools.AzureKinect
 {
-	[SerializeField] string _colorIntrinsicsSaveName = "KinectAzureIntrinsics_Color";
-	[SerializeField] string _depthIntrinsicsSaveName = "KinectAzureIntrinsics_Depth";
-
-
-	void Update()
+	public class KinectAzureIntrinsicsExtractor : MonoBehaviour
 	{
-		KinectManager kinectManager = KinectManager.Instance;
-		if( !kinectManager || !kinectManager.IsInitialized() ) return;
+		[SerializeField] string _colorIntrinsicsSaveName = "KinectAzureIntrinsics_Color";
+		[SerializeField] string _depthIntrinsicsSaveName = "KinectAzureIntrinsics_Depth";
+
+
+		void Update()
+		{
+			KinectManager kinectManager = KinectManager.Instance;
+			if( !kinectManager || !kinectManager.IsInitialized() ) return;
 		
-		KinectInterop.SensorData sensorData = kinectManager.GetSensorData( sensorIndex: 0 );
+			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( sensorIndex: 0 );
 
-		var kinectInterface = sensorData.sensorInterface as Kinect4AzureInterface;
-		var colorCameraMode = kinectInterface.colorCameraMode;
-		var depthCameraMode = kinectInterface.depthCameraMode;
+			var kinectInterface = sensorData.sensorInterface as Kinect4AzureInterface;
+			var colorCameraMode = kinectInterface.colorCameraMode;
+			var depthCameraMode = kinectInterface.depthCameraMode;
 
-		Intrinsics colorIntrinsics = new Intrinsics();
-		Intrinsics depthIntrinsics = new Intrinsics();
-		colorIntrinsics.UpdateFromAzureKinectExamples( sensorData.colorCamIntr );
-		depthIntrinsics.UpdateFromAzureKinectExamples( sensorData.depthCamIntr );
+			Intrinsics colorIntrinsics = new Intrinsics();
+			Intrinsics depthIntrinsics = new Intrinsics();
+			colorIntrinsics.UpdateFromAzureKinectExamples( sensorData.colorCamIntr );
+			depthIntrinsics.UpdateFromAzureKinectExamples( sensorData.depthCamIntr );
 
-		string colorFilePath = colorIntrinsics.SaveToFile( _colorIntrinsicsSaveName + colorCameraMode );
-		string depthFilePath = depthIntrinsics.SaveToFile( _depthIntrinsicsSaveName + depthCameraMode );
+			string colorFilePath = colorIntrinsics.SaveToFile( _colorIntrinsicsSaveName + colorCameraMode );
+			string depthFilePath = depthIntrinsics.SaveToFile( _depthIntrinsicsSaveName + depthCameraMode );
 
-		enabled = false;
+			enabled = false;
 
-		Debug.Log( "Depth and color intrinsics saved at paths:\n" + colorFilePath + "\n" + depthFilePath );
+			Debug.Log( "Depth and color intrinsics saved at paths:\n" + colorFilePath + "\n" + depthFilePath );
+		}
 	}
 }
