@@ -1,3 +1,9 @@
+## 0.0.3  (2024/01/03)
+
+- Refactored AzureKinectTextureProvider and AzureKinectTexture2DProvider to inherit from CameraTextureProvider and CameraTexture2DProvider.
+- Renamed "KinectAzure" to "AzureKinect" everywhere.
+
+
 ## 0.0.2  (2023/09/29)
 
 - Added KinectAzureTextureProvider as a GPU alternative to KinectAzureTexture2DProvider.

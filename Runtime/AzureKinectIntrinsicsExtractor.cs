@@ -8,7 +8,7 @@ using com.rfilkov.kinect;
 
 namespace TrackingTools.AzureKinect
 {
-	public class KinectAzureIntrinsicsExtractor : MonoBehaviour
+	public class AzureKinectIntrinsicsExtractor : MonoBehaviour
 	{
 		[SerializeField] string _colorIntrinsicsSaveName = "KinectAzureIntrinsics_Color";
 		[SerializeField] string _depthIntrinsicsSaveName = "KinectAzureIntrinsics_Depth";

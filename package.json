@@ -1,13 +1,13 @@
 {
   "name": "dk.cec.trackingtoolsforunity.azurekinect",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "displayName": "Tracking Tools for Unity - Azure Kinect",
   "description": "Kinect camera calibration helpers based on OpenCV for Unity and Azure Kinect Examples.",
   "author": {
     "name": "Carl Emil Carlsen",
     "url": "https://cec.dk"
   },
-  "unity": "2023.1",
+  "unity": "2023.2",
   "type": "code",
   "documentationUrl": "https://github.com/cecarlsen/TrackingToolsForUnity/blob/master/README.md",
   "samples": [
