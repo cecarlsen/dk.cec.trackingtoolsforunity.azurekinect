@@ -123,8 +123,19 @@ namespace TrackingTools.AzureKinect
 
 		void Awake()
 		{
-			//_colorEnabled = _colorTexture2DEvent != null && _colorTexture2DEvent.GetPersistentEventCount() > 0;
-			//_irEnabled = _irTexture2DEvent != null && _irTexture2DEvent.GetPersistentEventCount() > 0;
+			
+		}
+
+
+		void OnEnable()
+		{
+
+		}
+
+
+		void OnDisable()
+		{
+			_framesSinceLastUnityUpdate = 0;
 		}
 
 

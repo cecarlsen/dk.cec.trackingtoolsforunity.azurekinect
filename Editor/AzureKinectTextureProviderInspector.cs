@@ -24,6 +24,7 @@ namespace TrackingTools.AzureKinect
 
 		const string logPrepend = "<b>[" + nameof( AzureKinectTextureProvider ) + "]</b> ";
 
+
 		void OnEnable()
 		{
 			// Ensure that KinectAzureTextureProvider scripts will be executed early, so it can deliver messages before we compute anything.

@@ -123,6 +123,18 @@ namespace TrackingTools.AzureKinect
 		}
 
 
+		void OnEnable()
+		{
+			
+		}
+
+
+		void OnDisable()
+		{
+			_framesSinceLastUnityUpdate = 0;
+		}
+
+
 		void Update()
 		{
 			KinectManager kinectManager = KinectManager.Instance;

@@ -163,8 +163,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e52c59f8d284f1428f3dff6b3cec3de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorIntrinsicsSaveName: KinectAzureIntrinsics_Color
-  _depthIntrinsicsSaveName: KinectAzureIntrinsics_Depth
+  _colorIntrinsicsSaveName: AzureKinectIntrinsics_Color
+  _depthIntrinsicsSaveName: AzureKinectIntrinsics_Depth
 --- !u!1 &6675671742336151635
 GameObject:
   m_ObjectHideFlags: 0
