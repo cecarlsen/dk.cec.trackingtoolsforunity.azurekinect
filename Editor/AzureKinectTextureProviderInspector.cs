@@ -17,6 +17,7 @@ namespace TrackingTools.AzureKinect
 		SerializedProperty _undistortProp;
 		SerializedProperty _flipVerticallyProp;
 		SerializedProperty _latestTextureEventProp;
+		SerializedProperty _depthRangeEventProp;
 
 		AzureKinectTextureProvider _provider;
 
@@ -49,6 +50,7 @@ namespace TrackingTools.AzureKinect
 			_undistortProp = serializedObject.FindProperty( "_undistort" );
 			_flipVerticallyProp = serializedObject.FindProperty( "_flipVertically" );
 			_latestTextureEventProp = serializedObject.FindProperty( "_latestTextureEvent" );
+			_depthRangeEventProp = serializedObject.FindProperty( "_depthRangeEvent" );
 
 			_provider = target as AzureKinectTextureProvider;
 		}
@@ -73,6 +75,9 @@ namespace TrackingTools.AzureKinect
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField( "Events", EditorStyles.boldLabel );
 			EditorGUILayout.PropertyField( _latestTextureEventProp );
+			if( ( (AzureKinectTextureProvider.Stream) _streamProp.enumValueIndex ) == AzureKinectTextureProvider.Stream.Depth ) {
+				EditorGUILayout.PropertyField( _depthRangeEventProp );
+			}
 			
 			serializedObject.ApplyModifiedProperties();
 

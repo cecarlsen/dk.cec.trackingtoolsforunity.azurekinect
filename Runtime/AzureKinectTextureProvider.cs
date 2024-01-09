@@ -1,6 +1,8 @@
 ﻿/*
 	Copyright © Carl Emil Carlsen 2023-2024
 	http://cec.dk
+
+	Note that depth values are scaled to the range between kinectManager.GetSensorMinDistance( id ) and kinectManager.GetSensorMaxDistance( id ).
 */
 
 using UnityEngine;
@@ -23,6 +25,7 @@ namespace TrackingTools.AzureKinect
 
 		// Events.
 		[SerializeField] UnityEvent<Texture> _latestTextureEvent = new UnityEvent<Texture>();
+		[SerializeField] UnityEvent<Vector2> _depthRangeEvent = new UnityEvent<Vector2>();
 
 		ulong _latestFrameTimeMicroSeconds;
 		ulong _previousFrameTimeMicroSeconds;
@@ -252,6 +255,7 @@ namespace TrackingTools.AzureKinect
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
 
+
 			return true;
 		}
 
@@ -311,6 +315,8 @@ namespace TrackingTools.AzureKinect
 			_latestTexture = process ? _processedTexture : _depthSourceTexture;
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastDepthFrameTime;
+
+			_depthRangeEvent.Invoke( new Vector2( minDepthDistance, maxDepthDistance ) );
 
 			return true;
 		}
