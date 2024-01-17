@@ -186,13 +186,13 @@ namespace TrackingTools.AzureKinect
 			Texture colorTexture = kinectManager.GetColorImageTex( _sensorId );
 			colorTexture.wrapMode = TextureWrapMode.Repeat;
 			if( colorTexture ){
-				if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor";
+				if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorId + ")";
 			}
 
 			if( process ) {
 				if( !_processedTexture ) {
 					_processedTexture = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
-					_processedTexture.name = "KinectColorProcessed";
+					_processedTexture.name = "KinectColorProcessed (" + _sensorId + ")";
 				}
 			}
 
@@ -238,12 +238,12 @@ namespace TrackingTools.AzureKinect
 			_infraredSourceTexture.LoadRawTextureData( _rawImageDataBytes );
 			_infraredSourceTexture.Apply();
 
-			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR";
+			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorId + ")";
 
 			if( process ) {
 				if( !_processedTexture ){
 					_processedTexture = new RenderTexture( _infraredSourceTexture.width, _infraredSourceTexture.height, 0, _infraredSourceTexture.graphicsFormat );
-					_processedTexture.name = "KinectIRProcessed";
+					_processedTexture.name = "KinectIRProcessed (" + _sensorId + ")";
 				}
 			}
 
@@ -278,7 +278,7 @@ namespace TrackingTools.AzureKinect
 			if( !_depthSourceTexture || _depthSourceTexture.width != w || _depthSourceTexture.height != h ){
 				if( _depthSourceTexture ) _depthSourceTexture.Release();
 				_depthSourceTexture = new RenderTexture( w, h, 0, RenderTextureFormat.RFloat );
-				_depthSourceTexture.name = "KinectDepth";
+				_depthSourceTexture.name = "KinectDepth (" + _sensorId + ")";
 				_depthSourceTexture.filterMode = _depthSourceTexture ? FilterMode.Point : FilterMode.Bilinear; // Don't interpolate depth values.
 			}
 
@@ -304,7 +304,7 @@ namespace TrackingTools.AzureKinect
 			if( process ){
 				if( !_processedTexture ){
 					_processedTexture = new RenderTexture( _depthSourceTexture.width, _depthSourceTexture.height, 0, _depthSourceTexture.graphicsFormat );
-					_processedTexture.name = "KinectDepthProcessed";
+					_processedTexture.name = "KinectDepthProcessed (" + _sensorId + ")";
 				}
 			}
 

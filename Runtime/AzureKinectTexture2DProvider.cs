@@ -181,13 +181,13 @@ namespace TrackingTools.AzureKinect
 			Texture2D colorTexture = kinectManager.GetColorImageTex( _sensorId ) as Texture2D;
 			if( !colorTexture ) return false;
 
-			if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor";
+			if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorId + ")";
 
 			if( _undistort )
 			{
 				if( !_sourceTexture ) {
 					_sourceTexture = new Texture2D( colorTexture.width, colorTexture.height, GraphicsFormat.R8G8B8A8_SRGB, TextureCreationFlags.None );
-					_sourceTexture.name = "KinectColor";
+					_sourceTexture.name = "KinectColor (" + _sensorId + ")";
 				}
 
 				// Ensure undistort resources.
@@ -229,7 +229,7 @@ namespace TrackingTools.AzureKinect
 			if( !_sourceTexture ) {
 				int pixelCount = width * height;
 				_sourceTexture = new Texture2D( width, height, GraphicsFormat.R16_UNorm, TextureCreationFlags.None );
-				_sourceTexture.name = "KinectInfrared";
+				_sourceTexture.name = "KinectInfrared (" + _sensorId + ")";
 				_rawImageDataBytes = new byte[ pixelCount * 2 ];
 			}
 
