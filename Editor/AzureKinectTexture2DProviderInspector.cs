@@ -14,8 +14,11 @@ namespace TrackingTools.AzureKinect
 	{
 		SerializedProperty _sensorIdProp;
 		SerializedProperty _streamProp;
+		SerializedProperty _convertToR8Prop;
 		SerializedProperty _undistortProp;
-		//SerializedProperty _flipVerticallyProp;
+		SerializedProperty _infrared16BitScalarProp;
+		SerializedProperty _frameHistoryCapacityProp;
+		SerializedProperty _flipVerticallyProp;
 		SerializedProperty _latestTextureEventProp;
 
 		AzureKinectTexture2DProvider _provider;
@@ -46,8 +49,11 @@ namespace TrackingTools.AzureKinect
 
 			_sensorIdProp = serializedObject.FindProperty( "_sensorId" );
 			_streamProp = serializedObject.FindProperty( "_stream" );
+			_convertToR8Prop = serializedObject.FindProperty( "_convertToR8" );
 			_undistortProp = serializedObject.FindProperty( "_undistort" );
-			//_flipVerticallyProp = serializedObject.FindProperty( "_flipVertically" );
+			_flipVerticallyProp = serializedObject.FindProperty( "_flipVertically" );
+			_infrared16BitScalarProp = serializedObject.FindProperty( "_infrared16BitScalar" );
+			_frameHistoryCapacityProp = serializedObject.FindProperty( "_frameHistoryCapacity" );
 			_latestTextureEventProp = serializedObject.FindProperty( "_latestTextureEvent" );
 
 			_provider = target as AzureKinectTexture2DProvider;
@@ -63,12 +69,17 @@ namespace TrackingTools.AzureKinect
 			EditorGUI.BeginDisabledGroup( Application.isPlaying );
 			EditorGUILayout.PropertyField( _sensorIdProp );
 			EditorGUILayout.PropertyField( _streamProp );
+			EditorGUILayout.PropertyField( _frameHistoryCapacityProp );
 			EditorGUI.EndDisabledGroup();
 
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField( "Parameters", EditorStyles.boldLabel );
+			EditorGUILayout.PropertyField( _flipVerticallyProp );
+			EditorGUILayout.PropertyField( _convertToR8Prop );
+			if( _streamProp.enumValueIndex == (int) AzureKinectTexture2DProvider.Stream.Infrared && _convertToR8Prop.boolValue ) {
+				EditorGUILayout.PropertyField( _infrared16BitScalarProp );
+			}
 			EditorGUILayout.PropertyField( _undistortProp );
-			//EditorGUILayout.PropertyField( _flipVerticallyProp );
 
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField( "Events", EditorStyles.boldLabel );

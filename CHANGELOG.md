@@ -1,3 +1,8 @@
+## 0.0.4  (2024/01/23)
+
+- Added more options to AzureKinectTexture2DProvider.
+
+
 ## 0.0.3  (2024/01/03)
 
 - Refactored AzureKinectTextureProvider and AzureKinectTexture2DProvider to inherit from CameraTextureProvider and CameraTexture2DProvider.

@@ -1,5 +1,5 @@
 ﻿/*
-	Copyright © Carl Emil Carlsen 2020-2022
+	Copyright © Carl Emil Carlsen 2020-2024
 	http://cec.dk
 */
 
@@ -25,17 +25,21 @@ namespace TrackingTools.AzureKinect
 		[SerializeField] Stream _stream = Stream.Color;
 
 		// Parameters
+		[SerializeField] bool _flipVertically = false;
 		[SerializeField] bool _undistort = false;
+		[SerializeField] bool _convertToR8 = false;
+		[SerializeField,Range(0f,50f)] float _infrared16BitScalar = 25f;
 
 		// Events.
 		[SerializeField] UnityEvent<Texture2D> _latestTextureEvent = new UnityEvent<Texture2D>();
 
-		Texture2D _latestTexture;
+		Texture2D[] _textures;
+		double[] _frameTimes;
 
-		Texture2D _sourceTexture;
 		byte[] _rawImageDataBytes;
 
-		Mat _undistortSourceMat, _undistortTargetMat;
+		Mat _convertMat;
+		Mat _sourceMat, _undistortTargetMat;
 		Mat _undistortMapX, _undistortMapY;
 
 		ulong _latestFrameTimeMicroSeconds;
@@ -45,7 +49,8 @@ namespace TrackingTools.AzureKinect
 		int _framesSinceLastUnityUpdate = 0;
 
 		const string logPrepend = "<b>[" + nameof( AzureKinectTexture2DProvider ) + "]</b> ";
-
+		const double microSeconsToSeconds = 0.0000001d;
+		const double sixteenToEightBitRatio = 1.0 / 256.0;
 
 		/// <summary>
 		/// Number of frames counted since last Unity update.
@@ -60,12 +65,17 @@ namespace TrackingTools.AzureKinect
 		/// <summary>
 		/// Interval between two latest frames in seconds.
 		/// </summary>
-		public override double latestFrameInterval => ( _latestFrameTimeMicroSeconds - _previousFrameTimeMicroSeconds ) * 0.0000001d;
+		public override double latestFrameInterval => ( _latestFrameTimeMicroSeconds - _previousFrameTimeMicroSeconds ) * microSeconsToSeconds;
 
 		/// <summary>
 		/// Get latest frame number.
 		/// </summary>
 		public override long latestFrameNumber => _latestFrameNum;
+
+		/// <summary>
+		/// Get number of frames currently stored.
+		/// </summary>
+		public override int frameHistoryCount => (int) ( _latestFrameNum < _frameHistoryCapacity ? _latestFrameNum : _frameHistoryCapacity );
 
 
 
@@ -76,48 +86,48 @@ namespace TrackingTools.AzureKinect
 		/// <summary>
 		/// Get latest aquired frame.
 		/// </summary>
-		public override Texture GetLatestTexture() => _latestTexture;
+		public override Texture GetLatestTexture() => _textures?[ 0 ];
 
 
 		/// <summary>
 		/// Get texture at history index. History index 0 is the latest frame while index 1 is the previous frame.
 		/// </summary>
-		public override Texture GetHistoryTexture( int historyIndex ) {
-			if( historyIndex != 0 ) throw new Exception( "AzureKinectProvider only stores one frame." );
-
-			return _latestTexture;
+		public override Texture GetHistoryTexture( int historyIndex )
+		{
+			if( _textures?.Length > historyIndex ) return _textures[ historyIndex ];
+			return null;
 		}
 
 
 		/// <summary>
 		/// Get latest aquired frame.
 		/// </summary>
-		public override Texture2D GetLatestTexture2D() => _latestTexture;
+		public override Texture2D GetLatestTexture2D() => _textures?[ 0 ];
 
 
 		/// <summary>
 		/// Get texture at history index. History index 0 is the latest frame while index 1 is the previous frame.
 		/// </summary>
-		public override Texture2D GetHistoryTexture2D( int historyIndex ) {
-			if( historyIndex != 0 ) throw new Exception( "AzureKinectProvider only stores one frame." );
-
-			return _latestTexture;
+		public override Texture2D GetHistoryTexture2D( int historyIndex )
+		{
+			if( _textures?.Length > historyIndex ) return _textures[ historyIndex ];
+			return null;
 		}
 
 
 		/// <summary>
 		/// Get latest frame time in seconds, measured relative to capture begin time. 
 		/// </summary>
-		public override double GetLatestFrameTime() => _latestFrameTimeMicroSeconds * 0.0000001d;
+		public override double GetLatestFrameTime() => _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 
 		/// <summary>
 		/// Get history frame time in seconds, measured relative to capture begin time. History index 0 is the latest frame while index 1 is the previous frame.
 		/// </summary>
-		public override double GetHistoryFrameTime( int historyIndex ) {
-			if( historyIndex != 0 ) throw new System.Exception( "AzureKinectProvider only stores one frame." );
-
-			return _latestFrameTimeMicroSeconds * 0.0000001d;
+		public override double GetHistoryFrameTime( int historyIndex )
+		{
+			if( _frameTimes?.Length > historyIndex ) return _frameTimes[ historyIndex ];
+			return 0.0;
 		}
 
 
@@ -144,6 +154,14 @@ namespace TrackingTools.AzureKinect
 			KinectManager kinectManager = KinectManager.Instance;
 			if( !kinectManager || !kinectManager.IsInitialized() ) return;
 
+			// Ensure we have a frame history.
+			if( _textures?.Length != _frameHistoryCapacity ) {
+				if( _textures != null ) foreach( var tex in _textures ) Destroy( tex );
+				_textures = new Texture2D[ _frameHistoryCapacity ];
+				_frameTimes = new double[ _frameHistoryCapacity ];
+			}
+
+			// Force settings onto KinectManager.
 			switch( _stream )
 			{
 				case Stream.Color:
@@ -154,58 +172,87 @@ namespace TrackingTools.AzureKinect
 					break;
 			}
 
+			// Get data and update texture.
 			SensorData sensorData = kinectManager.GetSensorData( _sensorId );
-
-			// Update texture.
 			bool hasNewFrame = false;
-			switch( _stream ) {
-				case Stream.Color: hasNewFrame = UpdateColorTexture( kinectManager, sensorData ); break;
+			switch( _stream )
+			{
+				case Stream.Color: hasNewFrame = UpdateColorTexture( sensorData ); break;
 				case Stream.Infrared: hasNewFrame = UpdateInfraredTexture( kinectManager, sensorData ); break;
 			}
 
+			// Update stats and output.
 			if( hasNewFrame ) {
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
-				_latestTextureEvent.Invoke( _latestTexture );
+				_latestTextureEvent.Invoke( GetLatestTexture2D() );
 			} else {
 				_framesSinceLastUnityUpdate = 0;
 			}
 		}
 
 
-		bool UpdateColorTexture( KinectManager kinectManager, SensorData sensorData )
+		bool UpdateColorTexture( SensorData sensorData )
 		{
 			if( sensorData.lastColorFrameTime == _latestFrameTimeMicroSeconds ) return false;
-			
-			// The color texture is already a Texture2D, so we just output it.
-			Texture2D colorTexture = kinectManager.GetColorImageTex( _sensorId ) as Texture2D;
-			if( !colorTexture ) return false;
 
+			if( _frameHistoryCapacity > 1 ) ShiftHistory();
+
+			// The color texture is already a Texture2D.
+			Texture2D colorTexture = sensorData.colorImageTexture as Texture2D;
+			if( !colorTexture ) return false;
 			if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorId + ")";
 
-			if( _undistort )
-			{
-				if( !_sourceTexture ) {
-					_sourceTexture = new Texture2D( colorTexture.width, colorTexture.height, GraphicsFormat.R8G8B8A8_SRGB, TextureCreationFlags.None );
-					_sourceTexture.name = "KinectColor (" + _sensorId + ")";
-				}
-
-				// Ensure undistort resources.
-				if( _undistortSourceMat == null || _undistortSourceMat.width() != colorTexture.width || _undistortSourceMat.height() != colorTexture.height ) {
-					InitUndistortResources( colorTexture.width, colorTexture.height, CvType.CV_8UC4, sensorData.colorCamIntr );
-				}
-
-				Utils.texture2DToMat( colorTexture, _undistortSourceMat, flipAfter: false );
-
-				// Undistort
-				Imgproc.remap( _undistortSourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
-
-				// Copy to texture.
-				Utils.fastMatToTexture2D( _undistortTargetMat, _sourceTexture, flip: false );
+			// Ensure recoures.
+			int w = colorTexture.width;
+			int h = colorTexture.height;
+			TextureFormat format = _convertToR8 ? TextureFormat.R8 : _undistort ? TextureFormat.RGBA32 : TextureFormat.BGRA32;
+			int cvType = _convertToR8 ? CvType.CV_8UC1 : CvType.CV_8UC4;
+			if( _convertToR8 && ( _convertMat == null || _convertMat.width() != w || _convertMat.height() != h ) ) {
+				_convertMat?.Dispose();
+				_convertMat = new Mat( h, w, CvType.CV_8UC4 );
+			}
+			if( ( _convertToR8 || _undistort || _flipVertically ) && ( _sourceMat == null || _sourceMat.width() != w || _sourceMat.height() != h || _sourceMat.type() != cvType ) ) {
+				_sourceMat?.Dispose();
+				_sourceMat = new Mat( h, w, cvType );
+			}
+			if( _undistort && ( _undistortTargetMat == null || _undistortTargetMat.width() != w || _undistortTargetMat.height() != h || _undistortTargetMat.type() != cvType ) ) {
+				_undistortTargetMat?.Dispose();
+				_undistortTargetMat = new Mat( h, w, cvType );
+				InitUndistortResources( w, h, sensorData.colorCamIntr );
+			}
+			if( !_textures[ 0 ] || format != _textures[ 0 ].format ) {
+				if( _textures[ 0 ] ) Destroy( _textures[ 0 ] );
+				_textures[ 0 ] = new Texture2D( w, h, format, mipChain: false, linear: false );
+				_textures[ 0 ].name = "KinectColor (" + _sensorId + ")" + frameHistoryCount;
 			}
 
-			_latestTexture = _undistort ? _sourceTexture : colorTexture;
+			// Process.
+			// The incoming texture is flipped vertically, and that is exactly what OpenCV expects. But we may want to flip it after processing.
+			if( _undistort )
+			{
+				Utils.texture2DToMat( colorTexture, _convertToR8 ? _convertMat : _sourceMat, flipAfter: false );
+				if( _convertToR8 ) TrackingToolsHelper.ColorMatToLumanceMat( _convertMat, _sourceMat );
+				Imgproc.remap( _sourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
+				Utils.fastMatToTexture2D( _undistortTargetMat, _textures[ 0 ], _flipVertically );
 
+			} else if( _convertToR8 ){
+
+				Utils.texture2DToMat( colorTexture, _convertMat, flipAfter: false );
+				TrackingToolsHelper.ColorMatToLumanceMat( _convertMat, _sourceMat );
+				Utils.fastMatToTexture2D( _sourceMat, _textures[ 0 ], _flipVertically );
+
+			} else if( _flipVertically ){
+
+				Utils.texture2DToMat( colorTexture, _sourceMat, flipAfter: false );
+				Utils.fastMatToTexture2D( _sourceMat, _textures[ 0 ], _flipVertically );
+
+			} else {
+
+				Graphics.CopyTexture( colorTexture, _textures[ 0 ] );
+			}
+
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastColorFrameTime;
 
@@ -216,56 +263,74 @@ namespace TrackingTools.AzureKinect
 		bool UpdateInfraredTexture( KinectManager kinectManager, SensorData sensorData )
 		{
 			if( sensorData.lastInfraredFrameTime == _latestFrameTimeMicroSeconds ) return false;
-			
-			// Azure Kinect Examples unpacks IR on the GPU into a RenderTexture. We need a Texture2D. Also:
 
+			if( _frameHistoryCapacity > 1 ) ShiftHistory();
+
+			// Azure Kinect Examples unpacks IR on the GPU into a RenderTexture. We need a Texture2D. Also:
 			// Azure Kinect Examples loads IR as RGB24, but the IR is actually R16, so we loose a lot of information.
 			// If you look IR in the official Azure Kinect Viewver it matches Azure Kinet Examples. They are very bright, and typically burned out.
 			// We want the full spectrum, so we load 16bit directly to texture.
-			int width = sensorData.depthImageWidth;
-			int height = sensorData.depthImageHeight;
-				
-			// Create texture.
-			if( !_sourceTexture ) {
-				int pixelCount = width * height;
-				_sourceTexture = new Texture2D( width, height, GraphicsFormat.R16_UNorm, TextureCreationFlags.None );
-				_sourceTexture.name = "KinectInfrared (" + _sensorId + ")";
-				_rawImageDataBytes = new byte[ pixelCount * 2 ];
-			}
-
+			int w = sensorData.depthImageWidth;
+			int h = sensorData.depthImageHeight;
+			
 			// Get raw image data.
 			ushort[] rawImageData = kinectManager.GetRawInfraredMap( _sensorId );
 
-			if( _undistort )
-			{		
-				// Ensure undistort resources.
-				if( _undistortSourceMat == null || _undistortSourceMat.width() != width || _undistortSourceMat.height() != height ){
-					InitUndistortResources( width, height, CvType.CV_16U, sensorData.depthCamIntr );
-				}
+			// Ensure resources.
+			int cvType = _convertToR8 ? CvType.CV_8UC1 : CvType.CV_16U;
+			TextureFormat format = _convertToR8 ? TextureFormat.R8 : TextureFormat.R16;
+			int pixelCount = w * h;
+			if( _rawImageDataBytes?.Length != pixelCount * 2 ) {
+				_rawImageDataBytes = new byte[ pixelCount * 2 ];
+			}
+			if( _convertToR8 && ( _convertMat == null || _convertMat.width() != w || _convertMat.height() != h ) ) {
+				_convertMat?.Dispose();
+				_convertMat = new Mat( h, w, CvType.CV_16U );
+			}
+			if( ( _undistort || _convertToR8 || _flipVertically ) && ( _sourceMat == null || _sourceMat.width() != w || _sourceMat.height() != h || _sourceMat.type() != cvType ) ) {
+				_sourceMat?.Dispose();
+				_sourceMat = new Mat( h, w, cvType );
+			}
+			if( _undistort && ( _undistortTargetMat == null || _undistortTargetMat.width() != w || _undistortTargetMat.height() != h || _undistortTargetMat.type() != cvType ) ) {
+				_undistortTargetMat?.Dispose();
+				_undistortTargetMat = new Mat( h, w, cvType );
+				InitUndistortResources( w, h, sensorData.depthCamIntr );
+			}
+			if( !_textures[ 0 ] || _textures[ 0 ].width != w || _textures[ 0 ].height != h || _textures[ 0 ].format != format ) {
+				if( _textures[ 0 ] ) Destroy( _textures[ 0 ] );
+				_textures[ 0 ] = new Texture2D( w, h, format, mipChain: false, linear: false );
+				_textures[ 0 ].name = "KinectInfrared (" + _sensorId + ") " + frameHistoryCount;
+			}
 
+			// Process.
+			if( _undistort || _convertToR8 ||_flipVertically )
+			{		
 				// Copy to mat.
 				GCHandle arrayHandle = GCHandle.Alloc( rawImageData, GCHandleType.Pinned );
-				MatUtils.copyToMat( arrayHandle.AddrOfPinnedObject(), _undistortSourceMat );
+				MatUtils.copyToMat( arrayHandle.AddrOfPinnedObject(), _convertToR8 ? _convertMat : _sourceMat );
 				arrayHandle.Free();
 
+				// Convert.
+				if( _convertToR8 ) _convertMat.convertTo( _sourceMat, CvType.CV_8U, sixteenToEightBitRatio * _infrared16BitScalar );
+
 				// Undistort
-				Imgproc.remap( _undistortSourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
+				if( _undistort ) Imgproc.remap( _sourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
 
 				// Copy to texture.
-				Utils.fastMatToTexture2D( _undistortTargetMat, _sourceTexture, flip: false );
-					
+				Utils.fastMatToTexture2D( _undistort ? _undistortTargetMat : _sourceMat, _textures[ 0 ], _flipVertically );
+				
 			} else {
-			
+
 				// ushort[] to byte[].
 				// https://stackoverflow.com/questions/37213819/convert-ushort-into-byte-and-back
 				Buffer.BlockCopy( rawImageData, 0, _rawImageDataBytes, 0, rawImageData.Length * 2 );
 
 				// Load into texture.
-				_sourceTexture.LoadRawTextureData( _rawImageDataBytes );
-				_sourceTexture.Apply();
+				_textures[ 0 ].LoadRawTextureData( _rawImageDataBytes );
+				_textures[ 0 ].Apply();
 			}
 
-			_latestTexture = _sourceTexture;
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
 
@@ -274,13 +339,8 @@ namespace TrackingTools.AzureKinect
 
 
 
-		void InitUndistortResources( int w, int h, int cvType, CameraIntrinsics rfilkovIntrinsics )
+		void InitUndistortResources( int w, int h, CameraIntrinsics rfilkovIntrinsics )
 		{
-			_undistortSourceMat?.Dispose();
-			_undistortTargetMat?.Dispose();
-			_undistortSourceMat = new Mat( h, w, cvType );
-			_undistortTargetMat = new Mat( h, w, cvType );
-
 			if( _undistortMapX == null ) {
 				_undistortMapX = new Mat();
 				_undistortMapY = new Mat();
@@ -301,14 +361,22 @@ namespace TrackingTools.AzureKinect
 
 
 
+		void ShiftHistory()
+		{
+			var tempTex = _textures[ _textures.Length-1 ]; // Recycle.
+			for( int t = _textures.Length-1; t > 0; t-- ) _textures[ t ] = _textures[ t-1 ];
+			_textures[ 0 ] = tempTex;
+		}
+
 
 		void OnDestroy()
 		{
-			if( _sourceTexture ) Destroy( _sourceTexture );
-			_undistortSourceMat?.Dispose();
+			foreach( var tex in _textures ) Destroy( tex );
+			_sourceMat?.Dispose();
 			_undistortTargetMat?.Dispose();
 			_undistortMapX?.Dispose();
 			_undistortMapY?.Dispose();
+			_convertMat?.Dispose();
 		}
 	}
 

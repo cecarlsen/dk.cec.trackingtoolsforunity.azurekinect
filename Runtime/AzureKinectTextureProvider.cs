@@ -68,6 +68,11 @@ namespace TrackingTools.AzureKinect
 		/// </summary>
 		public override long latestFrameNumber => _latestFrameNum;
 
+		/// <summary>
+		/// Get number of frames currently stored.
+		/// </summary>
+		public override int frameHistoryCount => (int) ( _latestFrameNum < _frameHistoryCapacity ? _latestFrameNum : _frameHistoryCapacity );
+
 
 		[Serializable]
 		public enum Stream { Color, Infrared, Depth }
