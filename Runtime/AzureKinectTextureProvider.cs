@@ -215,6 +215,8 @@ namespace TrackingTools.AzureKinect
 
 		bool UpdateInfraredTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
+			if( sensorData == null ) return false;
+
 			if( sensorData.lastInfraredFrameTime == _latestFrameTimeMicroSeconds ) return false;
 
 			// Azure Kinect Examples loads IR as RGB24, but the IR is actually R16, so we loose a lot of information.
@@ -245,11 +247,9 @@ namespace TrackingTools.AzureKinect
 
 			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorId + ")";
 
-			if( process ) {
-				if( !_processedTexture ){
-					_processedTexture = new RenderTexture( _infraredSourceTexture.width, _infraredSourceTexture.height, 0, _infraredSourceTexture.graphicsFormat );
-					_processedTexture.name = "KinectIRProcessed (" + _sensorId + ")";
-				}
+			if( process && !_processedTexture ) {
+				_processedTexture = new RenderTexture( _infraredSourceTexture.width, _infraredSourceTexture.height, 0, _infraredSourceTexture.graphicsFormat );
+				_processedTexture.name = "KinectIRProcessed (" + _sensorId + ")";
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.depthCamIntr );
@@ -268,6 +268,8 @@ namespace TrackingTools.AzureKinect
 		bool UpdateDepthTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
 			//Debug.Log( sensorData.startTimeOffset + " " + kinectManager.GetDepthFrameTime( 0 ) + " == " + sensorData.lastDepthFrameTime );
+
+			if( sensorData == null ) return false;
 
 			if( sensorData.lastDepthFrameTime == _latestFrameTimeMicroSeconds ) return false;
 
