@@ -10,6 +10,7 @@ using UnityEngine.Events;
 using com.rfilkov.kinect;
 using UnityEngine.Experimental.Rendering;
 using System;
+using System.IO;
 
 namespace TrackingTools.AzureKinect
 {
@@ -33,8 +34,8 @@ namespace TrackingTools.AzureKinect
 		long _latestFrameNum = 0; // The kinect does not provide a frame numer, only time, so we do the counting ourselves.
 		int _framesSinceLastUnityUpdate = 0;
 
-		RenderTexture _processedTexture;
-		Texture _latestTexture;
+		Texture[] _textures;
+		double[] _frameTimes;
 
 		Material _renderDepthTextureMaterial;
 		RenderTexture _depthSourceTexture;
@@ -91,7 +92,7 @@ namespace TrackingTools.AzureKinect
 		/// <summary>
 		/// Get latest aquired frame.
 		/// </summary>
-		public override Texture GetLatestTexture() => _latestTexture;
+		public override Texture GetLatestTexture() => _textures?[ 0 ];
 
 
 		/// <summary>
@@ -99,9 +100,8 @@ namespace TrackingTools.AzureKinect
 		/// </summary>
 		public override Texture GetHistoryTexture( int historyIndex )
 		{
-			if( historyIndex != 0 ) throw new System.Exception( "AzureKinectProvider only stores one frame." );
-
-			return _latestTexture;
+			if( _textures?.Length > historyIndex ) return _textures[ historyIndex ];
+			return null;
 		}
 
 
@@ -116,9 +116,8 @@ namespace TrackingTools.AzureKinect
 		/// </summary>
 		public override double GetHistoryFrameTime( int historyIndex )
 		{
-			if( historyIndex != 0 ) throw new System.Exception( "AzureKinectProvider only stores one frame." );
-
-			return _latestFrameTimeMicroSeconds * 0.0000001d;
+			if( _frameTimes?.Length > historyIndex ) return _frameTimes[ historyIndex ];
+			return 0.0;
 		}
 
 
@@ -133,7 +132,12 @@ namespace TrackingTools.AzureKinect
 
 		void OnEnable()
 		{
-			
+			// Ensure we have a frame history.
+			if( _textures?.Length != _frameHistoryCapacity ) {
+				if( _textures != null ) foreach( var tex in _textures ) if( tex is RenderTexture ) ( tex as RenderTexture ).Release();
+				_textures = new RenderTexture[ _frameHistoryCapacity ];
+				_frameTimes = new double[ _frameHistoryCapacity ];
+			}
 		}
 
 
@@ -177,7 +181,7 @@ namespace TrackingTools.AzureKinect
 			if( hasNewFrame ) {
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
-				_latestTextureEvent.Invoke( _latestTexture );
+				_latestTextureEvent.Invoke( _textures[ 0 ] );
 			} else {
 				_framesSinceLastUnityUpdate = 0;
 			}
@@ -186,7 +190,9 @@ namespace TrackingTools.AzureKinect
 
 		bool UpdateColorTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
-			if( sensorData.lastColorFrameTime == _latestFrameTimeMicroSeconds ) return false;
+			if( sensorData == null || sensorData.lastColorFrameTime == _latestFrameTimeMicroSeconds ) return false;
+
+			if( _frameHistoryCapacity > 1 ) ShiftHistory();
 
 			Texture colorTexture = kinectManager.GetColorImageTex( _sensorId );
 			colorTexture.wrapMode = TextureWrapMode.Repeat;
@@ -194,18 +200,18 @@ namespace TrackingTools.AzureKinect
 				if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorId + ")";
 			}
 
-			if( process ) {
-				if( !_processedTexture ) {
-					_processedTexture = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
-					_processedTexture.name = "KinectColorProcessed (" + _sensorId + ")";
-				}
+			if( process || _frameHistoryCapacity > 1 && !_textures[ 0 ] ) {
+				_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
+				_textures[ 0 ].name = "KinectColorProcessed (" + _sensorId + ") " + frameHistoryCount;
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.colorCamIntr );
 
 			if( process ) Process( colorTexture );
+			else if( _frameHistoryCapacity > 1 ) Graphics.Blit( colorTexture, _textures[ 0 ] as RenderTexture );
 
-			_latestTexture = process ? _processedTexture : colorTexture;
+			if( !process && _frameHistoryCapacity == 1 ) _textures[ 0 ] = colorTexture;
+			
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastColorFrameTime;
 
@@ -215,9 +221,9 @@ namespace TrackingTools.AzureKinect
 
 		bool UpdateInfraredTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
-			if( sensorData == null ) return false;
+			if( sensorData == null || sensorData.lastInfraredFrameTime == _latestFrameTimeMicroSeconds ) return false;
 
-			if( sensorData.lastInfraredFrameTime == _latestFrameTimeMicroSeconds ) return false;
+			if( _frameHistoryCapacity > 1 ) ShiftHistory();
 
 			// Azure Kinect Examples loads IR as RGB24, but the IR is actually R16, so we loose a lot of information.
 			// If you look IR in the official Azure Kinect Viewver it matches Azure Kinet Examples. They are very bright, and typically burned out.
@@ -247,16 +253,17 @@ namespace TrackingTools.AzureKinect
 
 			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorId + ")";
 
-			if( process && !_processedTexture ) {
-				_processedTexture = new RenderTexture( _infraredSourceTexture.width, _infraredSourceTexture.height, 0, _infraredSourceTexture.graphicsFormat );
-				_processedTexture.name = "KinectIRProcessed (" + _sensorId + ")";
+			if( process && !_textures[ 0 ] ) {
+				_textures[ 0 ] = new RenderTexture( _infraredSourceTexture.width, _infraredSourceTexture.height, 0, _infraredSourceTexture.graphicsFormat );
+				_textures[ 0 ].name = "KinectIRProcessed (" + _sensorId + ") " + frameHistoryCount;
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.depthCamIntr );
 
 			if( process ) Process( _infraredSourceTexture );
 
-			_latestTexture = process ? _processedTexture : _infraredSourceTexture;
+			if( !process ) _textures[ 0 ] = _infraredSourceTexture;
+
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
 
@@ -267,11 +274,9 @@ namespace TrackingTools.AzureKinect
 
 		bool UpdateDepthTexture( KinectManager kinectManager, KinectInterop.SensorData sensorData )
 		{
-			//Debug.Log( sensorData.startTimeOffset + " " + kinectManager.GetDepthFrameTime( 0 ) + " == " + sensorData.lastDepthFrameTime );
+			if( sensorData == null || sensorData.lastDepthFrameTime == _latestFrameTimeMicroSeconds ) return false;
 
-			if( sensorData == null ) return false;
-
-			if( sensorData.lastDepthFrameTime == _latestFrameTimeMicroSeconds ) return false;
+			if( _frameHistoryCapacity > 1 ) ShiftHistory();
 
 			// Ensure we have a depth conversion material.
 			if( !_renderDepthTextureMaterial ) {
@@ -309,9 +314,9 @@ namespace TrackingTools.AzureKinect
 			Graphics.Blit( null, _depthSourceTexture, _renderDepthTextureMaterial );
 
 			if( process ){
-				if( !_processedTexture ){
-					_processedTexture = new RenderTexture( _depthSourceTexture.width, _depthSourceTexture.height, 0, _depthSourceTexture.graphicsFormat );
-					_processedTexture.name = "KinectDepthProcessed (" + _sensorId + ")";
+				if( !_textures[ 0 ] ) {
+					_textures[ 0 ] = new RenderTexture( _depthSourceTexture.width, _depthSourceTexture.height, 0, _depthSourceTexture.graphicsFormat );
+					_textures[ 0 ].name = "KinectDepthProcessed (" + _sensorId + ")";
 				}
 			}
 
@@ -319,7 +324,8 @@ namespace TrackingTools.AzureKinect
 
 			if( process ) Process( _depthSourceTexture );
 
-			_latestTexture = process ? _processedTexture : _depthSourceTexture;
+			if( !process ) _textures[ 0 ] = _depthSourceTexture;
+			
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastDepthFrameTime;
 
@@ -331,12 +337,13 @@ namespace TrackingTools.AzureKinect
 
 		void Process( Texture sourceTexture )
 		{
+			var targetTexture = _textures[ 0 ] as RenderTexture;
 			if( _undistort ) {
-				_lensUndistorter.Undistort( sourceTexture, _processedTexture, isTextureAxisYFlipped: true ); // We know that the input texture from AxureKinectExample is flipped to begin with.
-				if( _flipVertically ) flipper.FlipVertically( _processedTexture );
+				_lensUndistorter.Undistort( sourceTexture, targetTexture, isTextureAxisYFlipped: true ); // We know that the input texture from AxureKinectExample is flipped to begin with.
+				if( _flipVertically ) flipper.FlipVertically( targetTexture );
 
 			} else if( _flipVertically ) {
-				flipper.FlipVertically( sourceTexture, _processedTexture );
+				flipper.FlipVertically( sourceTexture, targetTexture );
 			}
 		}
 
@@ -351,9 +358,17 @@ namespace TrackingTools.AzureKinect
 		}
 
 
+		void ShiftHistory()
+		{
+			var tempTex = _textures[ _textures.Length-1 ]; // Recycle.
+			for( int t = _textures.Length-1; t > 0; t-- ) _textures[ t ] = _textures[ t-1 ];
+			_textures[ 0 ] = tempTex;
+		}
+
+
 		void OnDestroy()
 		{
-			_processedTexture?.Release();
+			foreach( var tex in _textures ) if( tex is RenderTexture ) ( tex as RenderTexture ).Release();
 			_depthSourceTexture?.Release();
 			_lensUndistorter?.Release();
 			flipper?.Release();

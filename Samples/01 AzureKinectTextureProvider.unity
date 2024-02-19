@@ -180,6 +180,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  _depthRangeEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &415149772
 Transform:
   m_ObjectHideFlags: 0
@@ -511,6 +514,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  _depthRangeEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &956860441
 Transform:
   m_ObjectHideFlags: 0
@@ -677,6 +683,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  _depthRangeEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1719828992
 GameObject:
   m_ObjectHideFlags: 0

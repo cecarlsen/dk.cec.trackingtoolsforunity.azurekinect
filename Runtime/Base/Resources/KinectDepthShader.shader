@@ -1,14 +1,14 @@
 /*
-	Copyright © Carl Emil Carlsen 2023
+	Copyright © Carl Emil Carlsen 2023-2024
 	http://cec.dk
 */
 
-Shader "KinectAzureTextureProvider/KinectDepthShader" {
-	Properties {
-		//_MainTex ("Base (RGB)", 2D) = "white" {}
-	}
-	SubShader {
-		Pass {
+Shader "KinectAzureTextureProvider/KinectDepthShader"
+{
+	SubShader
+	{
+		Pass
+		{
 			ZTest Always Cull Off ZWrite Off
 			Fog { Mode off }
 		
@@ -44,7 +44,7 @@ Shader "KinectAzureTextureProvider/KinectDepthShader" {
 			}
 
 			
-			float frag (v2f i) : COLOR
+			float frag( v2f i ) : COLOR
 			{
 				uint dx = (uint)(i.uv.x * _TexResX);
 				uint dy = (uint)(i.uv.y * _TexResY);
@@ -52,9 +52,9 @@ Shader "KinectAzureTextureProvider/KinectDepthShader" {
 
 				uint depth2 = _DepthMap[di >> 1];
 				uint depth = di & 1 != 0 ? depth2 >> 16 : depth2 & 0xffff;
-				uint cDepth = clamp(depth, _MinDepth, _MaxDepth);
+				uint cDepth = clamp( depth, _MinDepth, _MaxDepth );
 
-				float fDepth = ((float)cDepth - (float)_MinDepth) / (float)(_MaxDepth - _MinDepth);
+				float fDepth = ( (float) cDepth - (float) _MinDepth ) / (float)( _MaxDepth - _MinDepth );
 
 				return fDepth * (depth != 0);
 			}

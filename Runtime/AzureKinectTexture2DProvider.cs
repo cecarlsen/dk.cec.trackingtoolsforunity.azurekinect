@@ -7,7 +7,6 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using com.rfilkov.kinect;
-using UnityEngine.Experimental.Rendering;
 using OpenCVForUnity.CoreModule;
 using System.Runtime.InteropServices;
 using OpenCVForUnity.UnityUtils;
@@ -184,7 +183,7 @@ namespace TrackingTools.AzureKinect
 			// Update stats and output.
 			if( hasNewFrame ) {
 				_latestFrameNum++;
-				_framesSinceLastUnityUpdate = 1;
+				_framesSinceLastUnityUpdate = 1; // We only pick one frame per Unity update, max.
 				_latestTextureEvent.Invoke( GetLatestTexture2D() );
 			} else {
 				_framesSinceLastUnityUpdate = 0;
@@ -203,7 +202,7 @@ namespace TrackingTools.AzureKinect
 			if( !colorTexture ) return false;
 			if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorId + ")";
 
-			// Ensure recoures.
+			// Ensure resources.
 			int w = colorTexture.width;
 			int h = colorTexture.height;
 			TextureFormat format = _convertToR8 ? TextureFormat.R8 : _undistort ? TextureFormat.RGBA32 : TextureFormat.BGRA32;

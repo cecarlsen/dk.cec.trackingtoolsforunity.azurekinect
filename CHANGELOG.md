@@ -1,3 +1,8 @@
+## 0.0.5  (2024/02/19)
+
+- Added frame history to AzureKinectTextureProvider.
+
+
 ## 0.0.4  (2024/01/23)
 
 - Added more options to AzureKinectTexture2DProvider.

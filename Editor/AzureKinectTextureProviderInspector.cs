@@ -10,11 +10,13 @@ using UnityEngine;
 namespace TrackingTools.AzureKinect
 {
 	[CustomEditor( typeof( AzureKinectTextureProvider ) )]
+	[CanEditMultipleObjects]
 	public class AzureKinectTextureProviderInspector : Editor
 	{
 		SerializedProperty _sensorIdProp;
 		SerializedProperty _streamProp;
 		SerializedProperty _undistortProp;
+		SerializedProperty _frameHistoryCapacityProp;
 		SerializedProperty _flipVerticallyProp;
 		SerializedProperty _latestTextureEventProp;
 		SerializedProperty _depthRangeEventProp;
@@ -48,6 +50,7 @@ namespace TrackingTools.AzureKinect
 			_sensorIdProp = serializedObject.FindProperty( "_sensorId" );
 			_streamProp = serializedObject.FindProperty( "_stream" );
 			_undistortProp = serializedObject.FindProperty( "_undistort" );
+			_frameHistoryCapacityProp = serializedObject.FindProperty( "_frameHistoryCapacity" );
 			_flipVerticallyProp = serializedObject.FindProperty( "_flipVertically" );
 			_latestTextureEventProp = serializedObject.FindProperty( "_latestTextureEvent" );
 			_depthRangeEventProp = serializedObject.FindProperty( "_depthRangeEvent" );
@@ -65,6 +68,7 @@ namespace TrackingTools.AzureKinect
 			EditorGUI.BeginDisabledGroup( Application.isPlaying );
 			EditorGUILayout.PropertyField( _sensorIdProp );
 			EditorGUILayout.PropertyField( _streamProp );
+			EditorGUILayout.PropertyField( _frameHistoryCapacityProp );
 			EditorGUI.EndDisabledGroup();
 
 			EditorGUILayout.Space();
