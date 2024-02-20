@@ -251,9 +251,9 @@ namespace TrackingTools.AzureKinect
 				Graphics.CopyTexture( colorTexture, _textures[ 0 ] );
 			}
 
-			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastColorFrameTime;
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			return true;
 		}
@@ -329,9 +329,9 @@ namespace TrackingTools.AzureKinect
 				_textures[ 0 ].Apply();
 			}
 
-			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			return true;
 		}
@@ -363,7 +363,10 @@ namespace TrackingTools.AzureKinect
 		void ShiftHistory()
 		{
 			var tempTex = _textures[ _textures.Length-1 ]; // Recycle.
-			for( int t = _textures.Length-1; t > 0; t-- ) _textures[ t ] = _textures[ t-1 ];
+			for( int t = _textures.Length-1; t > 0; t-- ){
+				_textures[ t ] = _textures[ t-1 ];
+				_frameTimes[ t ] = _frameTimes[ t-1 ];
+			}
 			_textures[ 0 ] = tempTex;
 		}
 

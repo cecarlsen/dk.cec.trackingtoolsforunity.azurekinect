@@ -47,6 +47,9 @@ namespace TrackingTools.AzureKinect
 
 		static string logPrepend = "<b>[" + nameof( ExtrinsicsSaver ) + "]</b> ";
 
+		const double microSeconsToSeconds = 0.0000001d;
+
+
 		bool process => _undistort || _flipVertically;
 
 		/// <summary>
@@ -137,17 +140,6 @@ namespace TrackingTools.AzureKinect
 		}
 
 
-		void OnEnable()
-		{
-			// Ensure we have a frame history.
-			if( _textures?.Length != _frameHistoryCapacity ) {
-				if( _textures != null ) foreach( var tex in _textures ) if( tex is RenderTexture ) ( tex as RenderTexture ).Release();
-				_textures = new Texture[ _frameHistoryCapacity ];
-				_frameTimes = new double[ _frameHistoryCapacity ];
-			}
-		}
-
-
 		void OnDisable()
 		{
 			_framesSinceLastUnityUpdate = 0;
@@ -162,6 +154,13 @@ namespace TrackingTools.AzureKinect
 			if( _sensorIndex >= kinectManager.GetSensorCount() ) {
 				Debug.LogWarning( logPrepend + "Sensor index " + _sensorIndex + " out of range. " + kinectManager.GetSensorCount() + " sensor(s) are connected.\n" );
 				return;
+			}
+
+			// Ensure we have a frame history.
+			if( _textures?.Length != _frameHistoryCapacity ) {
+				if( _textures != null ) foreach( var tex in _textures ) if( tex is RenderTexture ) ( tex as RenderTexture ).Release();
+				_textures = new Texture[ _frameHistoryCapacity ];
+				_frameTimes = new double[ _frameHistoryCapacity ];
 			}
 
 			// Make sure KinectManager is set up correctly.
@@ -223,9 +222,10 @@ namespace TrackingTools.AzureKinect
 			else if( _frameHistoryCapacity > 1 ) Graphics.Blit( colorTexture, _textures[ 0 ] as RenderTexture );
 
 			if( !process && _frameHistoryCapacity == 1 ) _textures[ 0 ] = colorTexture;
-			
+
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastColorFrameTime;
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			return true;
 		}
@@ -278,6 +278,7 @@ namespace TrackingTools.AzureKinect
 
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			return true;
 		}
@@ -336,9 +337,10 @@ namespace TrackingTools.AzureKinect
 			if( process ) Process( _depthSourceTexture );
 
 			if( !process ) _textures[ 0 ] = _depthSourceTexture;
-			
+
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastDepthFrameTime;
+			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			_depthRangeEvent.Invoke( new Vector2( minDepthDistance, maxDepthDistance ) );
 
@@ -372,7 +374,10 @@ namespace TrackingTools.AzureKinect
 		void ShiftHistory()
 		{
 			var tempTex = _textures[ _textures.Length-1 ]; // Recycle.
-			for( int t = _textures.Length-1; t > 0; t-- ) _textures[ t ] = _textures[ t-1 ];
+			for( int t = _textures.Length-1; t > 0; t-- ){
+				_textures[ t ] = _textures[ t-1 ];
+				_frameTimes[ t ] = _frameTimes[ t-1 ];
+			}
 			_textures[ 0 ] = tempTex;
 		}
 
