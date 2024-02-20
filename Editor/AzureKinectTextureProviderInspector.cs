@@ -13,7 +13,7 @@ namespace TrackingTools.AzureKinect
 	[CanEditMultipleObjects]
 	public class AzureKinectTextureProviderInspector : Editor
 	{
-		SerializedProperty _sensorIdProp;
+		SerializedProperty _sensorIndexProp;
 		SerializedProperty _streamProp;
 		SerializedProperty _undistortProp;
 		SerializedProperty _frameHistoryCapacityProp;
@@ -47,7 +47,7 @@ namespace TrackingTools.AzureKinect
 				}
 			}
 
-			_sensorIdProp = serializedObject.FindProperty( "_sensorId" );
+			_sensorIndexProp = serializedObject.FindProperty( "_sensorIndex" );
 			_streamProp = serializedObject.FindProperty( "_stream" );
 			_undistortProp = serializedObject.FindProperty( "_undistort" );
 			_frameHistoryCapacityProp = serializedObject.FindProperty( "_frameHistoryCapacity" );
@@ -65,8 +65,9 @@ namespace TrackingTools.AzureKinect
 
 			EditorGUILayout.LabelField( "Setup", EditorStyles.boldLabel );
 
+			EditorGUILayout.PropertyField( _sensorIndexProp );
+
 			EditorGUI.BeginDisabledGroup( Application.isPlaying );
-			EditorGUILayout.PropertyField( _sensorIdProp );
 			EditorGUILayout.PropertyField( _streamProp );
 			EditorGUILayout.PropertyField( _frameHistoryCapacityProp );
 			EditorGUI.EndDisabledGroup();

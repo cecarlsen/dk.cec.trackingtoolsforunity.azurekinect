@@ -10,14 +10,13 @@ using UnityEngine.Events;
 using com.rfilkov.kinect;
 using UnityEngine.Experimental.Rendering;
 using System;
-using System.IO;
 
 namespace TrackingTools.AzureKinect
 {
 	public class AzureKinectTextureProvider : CameraTextureProvider
 	{
 		// Setup.
-		[SerializeField] int _sensorId = 0;
+		[SerializeField] int _sensorIndex = 0;
 		[SerializeField] Stream _stream = Stream.Color;
 
 		// Parameters.
@@ -46,6 +45,7 @@ namespace TrackingTools.AzureKinect
 
 		static Flipper flipper;
 
+		static string logPrepend = "<b>[" + nameof( ExtrinsicsSaver ) + "]</b> ";
 
 		bool process => _undistort || _flipVertically;
 
@@ -74,6 +74,13 @@ namespace TrackingTools.AzureKinect
 		/// </summary>
 		public override int frameHistoryCount => (int) ( _latestFrameNum < _frameHistoryCapacity ? _latestFrameNum : _frameHistoryCapacity );
 
+		/// <summary>
+		/// Access sensor index.
+		/// </summary>
+		public int sensorIndex {
+			get => _sensorIndex;
+			set => _sensorIndex = value;
+		}
 
 		[Serializable]
 		public enum Stream { Color, Infrared, Depth }
@@ -135,7 +142,7 @@ namespace TrackingTools.AzureKinect
 			// Ensure we have a frame history.
 			if( _textures?.Length != _frameHistoryCapacity ) {
 				if( _textures != null ) foreach( var tex in _textures ) if( tex is RenderTexture ) ( tex as RenderTexture ).Release();
-				_textures = new RenderTexture[ _frameHistoryCapacity ];
+				_textures = new Texture[ _frameHistoryCapacity ];
 				_frameTimes = new double[ _frameHistoryCapacity ];
 			}
 		}
@@ -152,6 +159,11 @@ namespace TrackingTools.AzureKinect
 			KinectManager kinectManager = KinectManager.Instance;
 			if( !kinectManager || !kinectManager.IsInitialized() ) return;
 
+			if( _sensorIndex >= kinectManager.GetSensorCount() ) {
+				Debug.LogWarning( logPrepend + "Sensor index " + _sensorIndex + " out of range. " + kinectManager.GetSensorCount() + " sensor(s) are connected.\n" );
+				return;
+			}
+
 			// Make sure KinectManager is set up correctly.
 			switch( _stream )
 			{
@@ -167,7 +179,7 @@ namespace TrackingTools.AzureKinect
 			}
 
 			// Get the sensor data.
-			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( _sensorId );
+			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( _sensorIndex );
 
 			// Update texture.
 			bool hasNewFrame = false;
@@ -181,7 +193,7 @@ namespace TrackingTools.AzureKinect
 			if( hasNewFrame ) {
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
-				_latestTextureEvent.Invoke( _textures[ 0 ] );
+				_latestTextureEvent.Invoke( GetLatestTexture() );
 			} else {
 				_framesSinceLastUnityUpdate = 0;
 			}
@@ -194,15 +206,15 @@ namespace TrackingTools.AzureKinect
 
 			if( _frameHistoryCapacity > 1 ) ShiftHistory();
 
-			Texture colorTexture = kinectManager.GetColorImageTex( _sensorId );
+			Texture colorTexture = kinectManager.GetColorImageTex( _sensorIndex );
 			colorTexture.wrapMode = TextureWrapMode.Repeat;
 			if( colorTexture ){
-				if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorId + ")";
+				if( string.IsNullOrEmpty( colorTexture.name ) ) colorTexture.name = "KinectColor (" + _sensorIndex + ")";
 			}
 
 			if( process || _frameHistoryCapacity > 1 && !_textures[ 0 ] ) {
 				_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
-				_textures[ 0 ].name = "KinectColorProcessed (" + _sensorId + ") " + frameHistoryCount;
+				_textures[ 0 ].name = "KinectColorProcessed (" + _sensorIndex + ") " + frameHistoryCount;
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.colorCamIntr );
@@ -229,19 +241,19 @@ namespace TrackingTools.AzureKinect
 			// If you look IR in the official Azure Kinect Viewver it matches Azure Kinet Examples. They are very bright, and typically burned out.
 			// We want the full spectrum, so we load 16bit directly to texture.
 
-			int width = sensorData.depthImageWidth;
-			int height = sensorData.depthImageHeight;
+			int w = sensorData.depthImageWidth;
+			int h = sensorData.depthImageHeight;
 				
 			// Create texture.
 			if( !_infraredSourceTexture ) {
-				int pixelCount = width * height;
-				_infraredSourceTexture = new Texture2D( width, height, GraphicsFormat.R16_UNorm, TextureCreationFlags.None );
-				_infraredSourceTexture.name = "KinectIR";
+				int pixelCount = w * h;
+				_infraredSourceTexture = new Texture2D( w, h, GraphicsFormat.R16_UNorm, TextureCreationFlags.None );
+				_infraredSourceTexture.name = "KinectIR (" + _sensorIndex + ")";
 				_rawImageDataBytes = new byte[ pixelCount * 2 ];
 			}
 
 			// Get raw image data.
-			ushort[] rawImageData = kinectManager.GetRawInfraredMap( _sensorId );
+			ushort[] rawImageData = kinectManager.GetRawInfraredMap( _sensorIndex );
 
 			// ushort[] to byte[].
 			// https://stackoverflow.com/questions/37213819/convert-ushort-into-byte-and-back
@@ -251,11 +263,11 @@ namespace TrackingTools.AzureKinect
 			_infraredSourceTexture.LoadRawTextureData( _rawImageDataBytes );
 			_infraredSourceTexture.Apply();
 
-			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorId + ")";
+			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorIndex + ")";
 
 			if( process && !_textures[ 0 ] ) {
-				_textures[ 0 ] = new RenderTexture( _infraredSourceTexture.width, _infraredSourceTexture.height, 0, _infraredSourceTexture.graphicsFormat );
-				_textures[ 0 ].name = "KinectIRProcessed (" + _sensorId + ") " + frameHistoryCount;
+				_textures[ 0 ] = new RenderTexture( w, h, 0, _infraredSourceTexture.graphicsFormat );
+				_textures[ 0 ].name = "KinectIRProcessed (" + _sensorIndex + ") " + frameHistoryCount;
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.depthCamIntr );
@@ -266,7 +278,6 @@ namespace TrackingTools.AzureKinect
 
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
-
 
 			return true;
 		}
@@ -285,12 +296,12 @@ namespace TrackingTools.AzureKinect
 			}
 
 			// Don't use AzureKinectExamples depth. It is RGB888 and encodes depth to two-color hue.
-			int w = kinectManager.GetDepthImageWidth( _sensorId );
-			int h = kinectManager.GetDepthImageHeight( _sensorId );
+			int w = kinectManager.GetDepthImageWidth( _sensorIndex );
+			int h = kinectManager.GetDepthImageHeight( _sensorIndex );
 			if( !_depthSourceTexture || _depthSourceTexture.width != w || _depthSourceTexture.height != h ){
 				if( _depthSourceTexture ) _depthSourceTexture.Release();
 				_depthSourceTexture = new RenderTexture( w, h, 0, RenderTextureFormat.RFloat );
-				_depthSourceTexture.name = "KinectDepth (" + _sensorId + ")";
+				_depthSourceTexture.name = "KinectDepth (" + _sensorIndex + ")";
 				_depthSourceTexture.filterMode = _depthSourceTexture ? FilterMode.Point : FilterMode.Bilinear; // Don't interpolate depth values.
 			}
 
@@ -303,8 +314,8 @@ namespace TrackingTools.AzureKinect
 				sensorData.depthImageBuffer.SetData( sensorData.depthImage );
 			}
 
-			float minDepthDistance = kinectManager.GetSensorMinDistance( _sensorId );
-			float maxDepthDistance = kinectManager.GetSensorMaxDistance( _sensorId );
+			float minDepthDistance = kinectManager.GetSensorMinDistance( _sensorIndex );
+			float maxDepthDistance = kinectManager.GetSensorMaxDistance( _sensorIndex );
 
 			_renderDepthTextureMaterial.SetInt( ShaderIDs._TexResX, w );
 			_renderDepthTextureMaterial.SetInt( ShaderIDs._TexResY, h );
@@ -315,8 +326,8 @@ namespace TrackingTools.AzureKinect
 
 			if( process ){
 				if( !_textures[ 0 ] ) {
-					_textures[ 0 ] = new RenderTexture( _depthSourceTexture.width, _depthSourceTexture.height, 0, _depthSourceTexture.graphicsFormat );
-					_textures[ 0 ].name = "KinectDepthProcessed (" + _sensorId + ")";
+					_textures[ 0 ] = new RenderTexture( w, h, 0, _depthSourceTexture.graphicsFormat );
+					_textures[ 0 ].name = "KinectDepthProcessed (" + _sensorIndex + ")";
 				}
 			}
 

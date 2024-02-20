@@ -1,3 +1,10 @@
+
+
+## 0.0.6  (2024/02/20)
+
+- Added MultiAzureKinectFromWorldPointsExtrinsicsEstimator.
+
+
 ## 0.0.5  (2024/02/19)
 
 - Added frame history to AzureKinectTextureProvider.
