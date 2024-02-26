@@ -34,6 +34,7 @@ namespace TrackingTools.AzureKinect
 
 		Texture2D[] _textures;
 		double[] _frameTimes;
+		float _frameHistoryDuration;
 
 		byte[] _rawImageDataBytes;
 
@@ -76,6 +77,7 @@ namespace TrackingTools.AzureKinect
 		/// </summary>
 		public override int frameHistoryCount => (int) ( _latestFrameNum < _frameHistoryCapacity ? _latestFrameNum : _frameHistoryCapacity );
 
+		public override float frameHistoryDuration => _frameHistoryDuration;
 
 
 		[Serializable]
@@ -127,6 +129,21 @@ namespace TrackingTools.AzureKinect
 		{
 			if( _frameTimes?.Length > historyIndex ) return _frameTimes[ historyIndex ];
 			return 0.0;
+		}
+
+
+		public override int GetHistoryFrameIndexAtDelayTime( float delay )
+		{
+			if( delay > _frameHistoryDuration ) return frameHistoryCount - 1;
+
+			float time = 0;
+			int index = 0;
+			while( time < delay || index >= frameHistoryCount-1 ) {
+				time += (float) ( _frameTimes[ index ] -  _frameTimes[ index+1 ] );
+				index++;
+			}
+
+			return index;
 		}
 
 
@@ -184,6 +201,8 @@ namespace TrackingTools.AzureKinect
 			if( hasNewFrame ) {
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1; // We only pick one frame per Unity update, max.
+				_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
+				if( _frameHistoryCapacity > 1 && _latestFrameNum > 1 ) _frameHistoryDuration += (float) ( _frameTimes[ 0 ] - _frameTimes[ 1 ] );
 				_latestTextureEvent.Invoke( GetLatestTexture2D() );
 			} else {
 				_framesSinceLastUnityUpdate = 0;
@@ -253,7 +272,6 @@ namespace TrackingTools.AzureKinect
 
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastColorFrameTime;
-			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			return true;
 		}
@@ -331,7 +349,6 @@ namespace TrackingTools.AzureKinect
 
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastInfraredFrameTime;
-			_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
 
 			return true;
 		}
@@ -363,6 +380,10 @@ namespace TrackingTools.AzureKinect
 		void ShiftHistory()
 		{
 			var tempTex = _textures[ _textures.Length-1 ]; // Recycle.
+			if( frameHistoryCount == frameHistoryCapacity ) {
+				// Subtract the frame interval duration we are discarding.
+				_frameHistoryDuration -= (float) ( _frameTimes[ _frameTimes.Length-2 ] - _frameTimes[ _frameTimes.Length-1 ] );
+			}
 			for( int t = _textures.Length-1; t > 0; t-- ){
 				_textures[ t ] = _textures[ t-1 ];
 				_frameTimes[ t ] = _frameTimes[ t-1 ];
@@ -373,7 +394,7 @@ namespace TrackingTools.AzureKinect
 
 		void OnDestroy()
 		{
-			foreach( var tex in _textures ) Destroy( tex );
+			foreach( var tex in _textures ) if( tex ) Destroy( tex );
 			_sourceMat?.Dispose();
 			_undistortTargetMat?.Dispose();
 			_undistortMapX?.Dispose();
