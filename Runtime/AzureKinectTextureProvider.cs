@@ -27,9 +27,9 @@ namespace TrackingTools.AzureKinect
 		[SerializeField] UnityEvent<Texture> _latestTextureEvent = new UnityEvent<Texture>();
 		[SerializeField] UnityEvent<Vector2> _depthRangeEvent = new UnityEvent<Vector2>();
 
-		ulong _latestFrameTimeMicroSeconds;
-		ulong _previousFrameTimeMicroSeconds;
-
+		ulong _latestFrameTimeMicroSeconds;		// Not aligned with Unity time.
+		ulong _previousFrameTimeMicroSeconds;	// Not aligned with Unity time.
+		float _latestFrameTimeUnity;
 		long _latestFrameNum = 0; // The kinect does not provide a frame numer, only time, so we do the counting ourselves.
 		int _framesSinceLastUnityUpdate = 0;
 
@@ -60,6 +60,7 @@ namespace TrackingTools.AzureKinect
 
 		/// <summary>
 		/// Number of frames aquired and available since last Unity update.
+		/// If frameHistoryCapacity is exceeded by the number of incoming frames in a single Unity frame, then framesAquiredSinceLastUnityUpdate may be lower than framesSinceLastUnityUpdate.
 		/// </summary>
 		public override int framesAquiredSinceLastUnityUpdate => _framesSinceLastUnityUpdate;
 
@@ -135,19 +136,23 @@ namespace TrackingTools.AzureKinect
 		}
 
 
-		public override int GetHistoryFrameIndexAtDelayTime( float delay )
+		/*
+		public override int GetHistoryFrameIndexAtDelayTime( float delayFromUnityNow )
 		{
+			float unityTimeElapsedSinceLastFrame = Time.time - _latestFrameTimeUnity;
+			float delay = delayFromUnityNow - unityTimeElapsedSinceLastFrame;
 			if( delay > _frameHistoryDuration ) return frameHistoryCount - 1;
 
 			float time = 0;
 			int index = 0;
-			while( time < delay || index >= frameHistoryCount-1 ) {
+			while( time < delay && index <= frameHistoryCount-1 ) {
 				time += (float) ( _frameTimes[ index ] -  _frameTimes[ index+1 ] );
 				index++;
 			}
 
 			return index;
 		}
+		*/
 
 
 		void Awake()
@@ -212,6 +217,7 @@ namespace TrackingTools.AzureKinect
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
 				_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
+				_latestFrameTimeUnity = Time.time;
 				if( _frameHistoryCapacity > 1 && _latestFrameNum > 1 ) _frameHistoryDuration += (float) ( _frameTimes[ 0 ] - _frameTimes[ 1 ] );
 				_latestTextureEvent.Invoke( GetLatestTexture() );
 			} else {

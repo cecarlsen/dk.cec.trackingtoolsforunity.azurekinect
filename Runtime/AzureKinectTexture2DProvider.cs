@@ -132,6 +132,7 @@ namespace TrackingTools.AzureKinect
 		}
 
 
+		/*
 		public override int GetHistoryFrameIndexAtDelayTime( float delay )
 		{
 			if( delay > _frameHistoryDuration ) return frameHistoryCount - 1;
@@ -145,6 +146,7 @@ namespace TrackingTools.AzureKinect
 
 			return index;
 		}
+		*/
 
 
 		void Awake()
