@@ -21,17 +21,34 @@ namespace TrackingTools.AzureKinect
 		
 			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( sensorIndex: 0 );
 
-			var kinectInterface = sensorData.sensorInterface as Kinect4AzureInterface;
-			var colorCameraMode = kinectInterface.colorCameraMode;
-			var depthCameraMode = kinectInterface.depthCameraMode;
-
 			Intrinsics colorIntrinsics = new Intrinsics();
 			Intrinsics depthIntrinsics = new Intrinsics();
-			colorIntrinsics.UpdateFromAzureKinectExamples( sensorData.colorCamIntr );
-			depthIntrinsics.UpdateFromAzureKinectExamples( sensorData.depthCamIntr );
+			if(
+				!colorIntrinsics.UpdateFromAzureKinectExamples( sensorData.colorCamIntr ) ||
+				!depthIntrinsics.UpdateFromAzureKinectExamples( sensorData.depthCamIntr )
+			){
+				enabled = false;
+				return;
+			}
 
-			string colorFilePath = colorIntrinsics.SaveToFile( _colorIntrinsicsSaveName + colorCameraMode );
-			string depthFilePath = depthIntrinsics.SaveToFile( _depthIntrinsicsSaveName + depthCameraMode );
+			string colorIntrinsicsSaveName = _colorIntrinsicsSaveName;
+			string depthIntrinsicsSaveName = _depthIntrinsicsSaveName;
+			if( sensorData.sensorInterface is Kinect4AzureInterface ) {
+				var kinectInterface = sensorData.sensorInterface as Kinect4AzureInterface;
+				var colorCameraMode = kinectInterface.colorCameraMode;
+				var depthCameraMode = kinectInterface.depthCameraMode;
+				colorIntrinsicsSaveName += colorCameraMode;
+				depthIntrinsicsSaveName += depthCameraMode;
+			} else if( sensorData.sensorInterface is RealSenseInterface ) {
+				var realsenseInterface = sensorData.sensorInterface as RealSenseInterface;
+				var colorCameraMode = realsenseInterface.colorCameraMode;
+				var depthCameraMode = realsenseInterface.depthCameraMode;
+				colorIntrinsicsSaveName += colorCameraMode;
+				depthIntrinsicsSaveName += depthCameraMode;
+			}
+
+			string colorFilePath = colorIntrinsics.SaveToFile( colorIntrinsicsSaveName );
+			string depthFilePath = depthIntrinsics.SaveToFile( depthIntrinsicsSaveName );
 
 			enabled = false;
 

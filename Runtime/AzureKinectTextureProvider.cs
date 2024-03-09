@@ -239,7 +239,8 @@ namespace TrackingTools.AzureKinect
 			}
 
 			if( process || _frameHistoryCapacity > 1 && !_textures[ 0 ] ) {
-				_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
+				//_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
+				_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, GraphicsFormat.R8G8B8A8_UNorm );
 				_textures[ 0 ].name = "KinectColorProcessed (" + _sensorIndex + ") " + frameHistoryCount;
 			}
 
