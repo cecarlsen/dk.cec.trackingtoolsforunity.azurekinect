@@ -412,7 +412,7 @@ namespace TrackingTools.AzureKinect
 
 		void OnDestroy()
 		{
-			foreach( var tex in _textures ) if( tex is RenderTexture ) ( tex as RenderTexture ).Release();
+			if( _textures != null) foreach( var tex in _textures ) if( tex && tex is RenderTexture ) ( tex as RenderTexture ).Release();
 			_depthSourceTexture?.Release();
 			_lensUndistorter?.Release();
 			flipper?.Release();
