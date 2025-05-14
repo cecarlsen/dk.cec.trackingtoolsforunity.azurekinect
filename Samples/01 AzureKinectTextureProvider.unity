@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,12 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -149,9 +149,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _frameHistoryCapacity: 1
-  _sensorId: 0
+  _sensorIndex: 0
   _stream: 1
-  _undistort: 1
+  _undistort: 0
   _flipVertically: 1
   _latestTextureEvent:
     m_PersistentCalls:
@@ -483,9 +483,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _frameHistoryCapacity: 1
-  _sensorId: 0
+  _sensorIndex: 0
   _stream: 2
-  _undistort: 1
+  _undistort: 0
   _flipVertically: 1
   _latestTextureEvent:
     m_PersistentCalls:
@@ -652,9 +652,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _frameHistoryCapacity: 1
-  _sensorId: 0
+  _sensorIndex: 0
   _stream: 0
-  _undistort: 1
+  _undistort: 0
   _flipVertically: 1
   _latestTextureEvent:
     m_PersistentCalls:
@@ -1134,6 +1134,10 @@ PrefabInstance:
     - target: {fileID: 6843673403491521533, guid: 070a2db91cf27fd4a85638d4181a0c49, type: 3}
       propertyPath: getDepthFrames
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6843673403491521533, guid: 070a2db91cf27fd4a85638d4181a0c49, type: 3}
+      propertyPath: syncBodyAndDepth
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6843673403491521533, guid: 070a2db91cf27fd4a85638d4181a0c49, type: 3}
       propertyPath: getInfraredFrames

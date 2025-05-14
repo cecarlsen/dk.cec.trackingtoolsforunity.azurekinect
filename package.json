@@ -18,6 +18,6 @@
     }
   ],
   "dependencies": {
-    "dk.cec.trackingtoolsforunity": ""
+    "dk.cec.trackingtoolsforunity": "0.1.9"
   }
 }

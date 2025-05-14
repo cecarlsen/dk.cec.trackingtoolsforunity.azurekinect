@@ -251,21 +251,21 @@ namespace TrackingTools.AzureKinect
 			// The incoming texture is flipped vertically, and that is exactly what OpenCV expects. But we may want to flip it after processing.
 			if( _undistort )
 			{
-				Utils.texture2DToMat( colorTexture, _convertToR8 ? _convertMat : _sourceMat, flipAfter: false );
+				Utils.texture2DToMat( colorTexture, _convertToR8 ? _convertMat : _sourceMat, flip: false ); // was flipAfter
 				if( _convertToR8 ) TrackingToolsHelper.ColorMatToLumanceMat( _convertMat, _sourceMat );
 				Imgproc.remap( _sourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
-				Utils.fastMatToTexture2D( _undistortTargetMat, _textures[ 0 ], _flipVertically );
+				Utils.matToTexture2DRaw( _undistortTargetMat, _textures[ 0 ], _flipVertically );
 
 			} else if( _convertToR8 ){
 
-				Utils.texture2DToMat( colorTexture, _convertMat, flipAfter: false );
+				Utils.texture2DToMat( colorTexture, _convertMat, flip: false ); // was flipAfter
 				TrackingToolsHelper.ColorMatToLumanceMat( _convertMat, _sourceMat );
-				Utils.fastMatToTexture2D( _sourceMat, _textures[ 0 ], _flipVertically );
+				Utils.matToTexture2DRaw( _sourceMat, _textures[ 0 ], _flipVertically );
 
 			} else if( _flipVertically ){
 
-				Utils.texture2DToMat( colorTexture, _sourceMat, flipAfter: false );
-				Utils.fastMatToTexture2D( _sourceMat, _textures[ 0 ], _flipVertically );
+				Utils.texture2DToMat( colorTexture, _sourceMat, flip: false ); // was flipAfter
+				Utils.matToTexture2DRaw( _sourceMat, _textures[ 0 ], _flipVertically );
 
 			} else {
 
@@ -336,7 +336,7 @@ namespace TrackingTools.AzureKinect
 				if( _undistort ) Imgproc.remap( _sourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
 
 				// Copy to texture.
-				Utils.fastMatToTexture2D( _undistort ? _undistortTargetMat : _sourceMat, _textures[ 0 ], _flipVertically );
+				Utils.matToTexture2DRaw( _undistort ? _undistortTargetMat : _sourceMat, _textures[ 0 ], _flipVertically );
 				
 			} else {
 
