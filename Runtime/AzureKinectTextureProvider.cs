@@ -29,7 +29,7 @@ namespace TrackingTools.AzureKinect
 
 		ulong _latestFrameTimeMicroSeconds;		// Not aligned with Unity time.
 		ulong _previousFrameTimeMicroSeconds;	// Not aligned with Unity time.
-		float _latestFrameTimeUnity;
+		//float _latestFrameTimeUnity;
 		long _latestFrameNum = 0; // The kinect does not provide a frame numer, only time, so we do the counting ourselves.
 		int _framesSinceLastUnityUpdate = 0;
 
@@ -217,7 +217,7 @@ namespace TrackingTools.AzureKinect
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
 				_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
-				_latestFrameTimeUnity = Time.time;
+				//_latestFrameTimeUnity = Time.time;
 				if( _frameHistoryCapacity > 1 && _latestFrameNum > 1 ) _frameHistoryDuration += (float) ( _frameTimes[ 0 ] - _frameTimes[ 1 ] );
 				_latestTextureEvent.Invoke( GetLatestTexture() );
 			} else {
@@ -290,11 +290,13 @@ namespace TrackingTools.AzureKinect
 			_infraredSourceTexture.LoadRawTextureData( _rawImageDataBytes );
 			_infraredSourceTexture.Apply();
 
-			if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorIndex + ")";
+			//if( _infraredSourceTexture && string.IsNullOrEmpty( _infraredSourceTexture.name ) ) _infraredSourceTexture.name = "KinectIR (" + _sensorIndex + ")";
 
-			if( process && !_textures[ 0 ] ) {
-				_textures[ 0 ] = new RenderTexture( w, h, 0, _infraredSourceTexture.graphicsFormat );
-				_textures[ 0 ].name = "KinectIRProcessed (" + _sensorIndex + ") " + frameHistoryCount;
+			var firstTexture = _textures[ 0 ];
+			if( process && !firstTexture ) {
+				firstTexture = new RenderTexture( w, h, 0, _infraredSourceTexture.graphicsFormat );
+				firstTexture.name = "KinectIRProcessed (" + _sensorIndex + ") " + frameHistoryCount;
+				_textures[ 0 ] = firstTexture;
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.depthCamIntr );
