@@ -38,12 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -711,8 +711,9 @@ MonoBehaviour:
   _targetCheckerboardTransform: {fileID: 0}
   _cameraSourceTexture: {fileID: 0}
   _flipSourceTextureVertically: 1
-  _intrinsicsFileName: AzureKinectIntrinsics_Depth_640_x_576_30Fps_3_86mNfov
+  _intrinsicsFileName: FemtoBoltIntrinsics_Depth_640_x_576_30Fps_3_86mNfov
   _calibrationBoard: {fileID: 11400000, guid: 6eedf21781e3dec409c0c7f8c925e708, type: 2}
+  _conversionFactorFor16BitTextures: 1
   _normalizeSourceTexture: 0
   _tranformCalibrationBoard: 0
   _fastAndImprecise: 1
@@ -826,7 +827,10 @@ MonoBehaviour:
   _frameHistoryCapacity: 1
   _sensorId: 0
   _stream: 1
+  _flipVertically: 0
   _undistort: 0
+  _convertToR8: 0
+  _infrared16BitScalar: 25
   _latestTextureEvent:
     m_PersistentCalls:
       m_Calls:
@@ -1004,24 +1008,16 @@ MonoBehaviour:
   pointCloudColorTexture: {fileID: 0}
   pointCloudPlayerList: 
   frameSourceFlags: 0
-  depth2colorCamMat:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
+  isSyncDepthAndColor: 0
+  isSyncBodyAndDepth: 0
+  initialPosePosition: {x: 0, y: 0, z: 0}
+  initialPoseRotation: {x: 0, y: 0, z: 0, w: 1}
+  sensorRotOffset: {x: 0, y: 0, z: 0}
+  sensorRotFlipZ: 0
+  sensorRotIgnoreY: 0
   sensorRotValueY: 0
+  bIgnoreZCoordinates: 0
+  bIgnoreInferredJoints: 0
   colorCameraMode: 1
   depthCameraMode: 2
   cameraFPS: 2
@@ -1070,24 +1066,16 @@ MonoBehaviour:
   pointCloudColorTexture: {fileID: 0}
   pointCloudPlayerList: 
   frameSourceFlags: 0
-  depth2colorCamMat:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
+  isSyncDepthAndColor: 0
+  isSyncBodyAndDepth: 0
+  initialPosePosition: {x: 0, y: 0, z: 0}
+  initialPoseRotation: {x: 0, y: 0, z: 0, w: 1}
+  sensorRotOffset: {x: 0, y: 0, z: 0}
+  sensorRotFlipZ: 0
+  sensorRotIgnoreY: 0
   sensorRotValueY: 0
+  bIgnoreZCoordinates: 0
+  bIgnoreInferredJoints: 0
   colorCameraMode: 35
   depthCameraMode: 35
 --- !u!4 &6843673402766038097
@@ -1260,24 +1248,16 @@ MonoBehaviour:
   pointCloudColorTexture: {fileID: 0}
   pointCloudPlayerList: 
   frameSourceFlags: 0
-  depth2colorCamMat:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
+  isSyncDepthAndColor: 0
+  isSyncBodyAndDepth: 0
+  initialPosePosition: {x: 0, y: 0, z: 0}
+  initialPoseRotation: {x: 0, y: 0, z: 0, w: 1}
+  sensorRotOffset: {x: 0, y: 0, z: 0}
+  sensorRotFlipZ: 0
+  sensorRotIgnoreY: 0
   sensorRotValueY: 0
+  bIgnoreZCoordinates: 0
+  bIgnoreInferredJoints: 0
   usersFaceBackwards: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
