@@ -38,12 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -127,114 +127,51 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: _checkerboard
       value: 
-      objectReference: {fileID: 11400000, guid: 7fc5afb9678acb040a4b45c31d7d09af,
-        type: 2}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _chessTileSize
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _flipCameraTexture
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _chessPatternSize.x
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _chessPatternSize.y
-      value: 11
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _desiredSampleCount
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _intrinsicsFileName
-      value: DefaultKinectAzure_IR_512_512_wide
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _normalizeSourceTexture
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: _addErrorValueToFileName
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1320722533865885985, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: m_Name
-      value: CameraFromCheckerboardIntrinsicsEstimator
-      objectReference: {fileID: 0}
-    - target: {fileID: 3003002446927682914, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+      objectReference: {fileID: 11400000, guid: dada8e8f2fd5ae640883871bbb2b5fc3, type: 2}
+    - target: {fileID: 3003002446927682914, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_Name
       value: CameraFromCheckerboardIntrinsicsEstimatorSetup
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-        type: 3}
+    - target: {fileID: 3764692443249517064, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -245,8 +182,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
 --- !u!114 &108643671 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
   m_PrefabInstance: {fileID: 108643670}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -301,8 +237,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _frameHistoryCapacity: 1
   _sensorId: 0
-  _stream: 1
+  _stream: 0
+  _flipVertically: 1
   _undistort: 0
+  _convertToR8: 0
+  _infrared16BitScalar: 25
   _latestTextureEvent:
     m_PersistentCalls:
       m_Calls:
@@ -341,24 +280,16 @@ MonoBehaviour:
   pointCloudColorTexture: {fileID: 0}
   pointCloudPlayerList: 
   frameSourceFlags: 0
-  depth2colorCamMat:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
+  isSyncDepthAndColor: 0
+  isSyncBodyAndDepth: 0
+  initialPosePosition: {x: 0, y: 0, z: 0}
+  initialPoseRotation: {x: 0, y: 0, z: 0, w: 1}
+  sensorRotOffset: {x: 0, y: 0, z: 0}
+  sensorRotFlipZ: 0
+  sensorRotIgnoreY: 0
   sensorRotValueY: 0
+  bIgnoreZCoordinates: 0
+  bIgnoreInferredJoints: 0
   colorCameraMode: 1
   depthCameraMode: 3
   cameraFPS: 2
@@ -368,7 +299,7 @@ MonoBehaviour:
   playbackPosSeconds: -1
   loopPlayback: 0
   bodyTrackingSensorOrientation: 0
-  bodyTrackingProcessingMode: 2
+  bodyTrackingProcessingMode: 0
   detectFloorForPoseEstimation: 1
 --- !u!4 &6843673402307104417
 Transform:
@@ -435,7 +366,7 @@ MonoBehaviour:
   startDepthSensors: 1
   dontDestroyAcrossScenes: 0
   getDepthFrames: 1
-  getColorFrames: 0
+  getColorFrames: 2
   getInfraredFrames: 1
   getPoseFrames: 0
   getBodyFrames: 0
