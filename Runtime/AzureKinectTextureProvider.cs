@@ -173,8 +173,8 @@ namespace TrackingTools.AzureKinect
 		void Update()
 		{
 			KinectManager kinectManager = KinectManager.Instance;
-			if( !kinectManager || !kinectManager.IsInitialized() ) return;
-
+			if( !kinectManager || !kinectManager.IsInitialized() || !kinectManager.IsDepthSensorsStarted() ) return;
+			
 			if( _sensorIndex >= kinectManager.GetSensorCount() ) {
 				Debug.LogWarning( logPrepend + "Sensor index " + _sensorIndex + " out of range. " + kinectManager.GetSensorCount() + " sensor(s) are connected.\n" );
 				return;

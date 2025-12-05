@@ -1886,6 +1886,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 6843673401472626457, guid: 070a2db91cf27fd4a85638d4181a0c49, type: 3}
+      propertyPath: deviceIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6843673401472626457, guid: 070a2db91cf27fd4a85638d4181a0c49, type: 3}
       propertyPath: colorCameraMode
       value: 1
       objectReference: {fileID: 0}
