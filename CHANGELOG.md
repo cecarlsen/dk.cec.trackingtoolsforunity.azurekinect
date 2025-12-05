@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [0.0.8]  2025-12-05
+
+- Update to the new Input System.
+
+
 ## [0.0.7]  2024-02-26
 
 - Added additional frame history getter options to CameraTextureProvider.

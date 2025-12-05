@@ -12,14 +12,12 @@ namespace TrackingTools.AzureKinect
 	public class MultiAzureKinectFromWorldPointsExtrinsicsEstimatorInspector : Editor
 	{
 		SerializedProperty _textureProviderProp;
-		SerializedProperty _extrinsicsSaverProp;
 		SerializedProperty _resourcesProp;
 
 
 		void OnEnable()
 		{
 			_textureProviderProp = serializedObject.FindProperty( "_textureProvider" );
-			_extrinsicsSaverProp = serializedObject.FindProperty( "_extrinsicsSaver" );
 			_resourcesProp = serializedObject.FindProperty( "_resources" );
 		}
 
@@ -32,7 +30,6 @@ namespace TrackingTools.AzureKinect
 
 			EditorGUI.BeginDisabledGroup( Application.isPlaying );
 			EditorGUILayout.PropertyField( _textureProviderProp );
-			EditorGUILayout.PropertyField( _extrinsicsSaverProp );
 			EditorGUILayout.PropertyField( _resourcesProp );
 			EditorGUI.EndDisabledGroup();
 

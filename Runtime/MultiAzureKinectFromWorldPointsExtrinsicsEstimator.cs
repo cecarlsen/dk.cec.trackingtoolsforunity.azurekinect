@@ -1,9 +1,11 @@
 /*
-	Copyright © Carl Emil Carlsen 2024
+	Copyright © Carl Emil Carlsen 2024-2025
 	http://cec.dk
 */
 
 using UnityEngine;
+using UnityEngine.InputSystem;
+
 
 namespace TrackingTools.AzureKinect
 {
@@ -11,10 +13,11 @@ namespace TrackingTools.AzureKinect
 	public class MultiAzureKinectFromWorldPointsExtrinsicsEstimator : MonoBehaviour
 	{
 		[SerializeField] AzureKinectTextureProvider _textureProvider;
-		[SerializeField] ExtrinsicsSaver _extrinsicsSaver;
 		[SerializeField] Resource[] _resources;
 
 		CameraFromWorldPointsExtrinsicsEstimator _cameraEstimator;
+
+		ExtrinsicsSaver _extrinsicsSaver;
 
 
 		[System.Serializable]
@@ -24,13 +27,17 @@ namespace TrackingTools.AzureKinect
 			public string physicalCameraIntrinsicsFileName = "DefaultCamera";
 			public string calibrationPointsFileName = "DefaultPoints";
 			public string extrinsicsFileName = "Default";
-			public KeyCode hotKeyCode = KeyCode.Alpha1;
+			public Transform[] worldPointTransforms = null;
+			public Key hotKeyCode = Key.Digit1;
 		}
 
 
 		void Awake()
 		{
 			_cameraEstimator = GetComponent<CameraFromWorldPointsExtrinsicsEstimator>();
+
+			_extrinsicsSaver = _cameraEstimator.virtualCamera.GetComponent<ExtrinsicsSaver>();
+			if( !_extrinsicsSaver ) _extrinsicsSaver = _cameraEstimator.virtualCamera.gameObject.AddComponent<ExtrinsicsSaver>();
 		}
 
 
@@ -44,8 +51,16 @@ namespace TrackingTools.AzureKinect
 		{
 			foreach( var resource in _resources )
 			{
-				if( Input.GetKeyDown( resource.hotKeyCode ) ) SetResource( resource );
+				if( Keyboard.current[ resource.hotKeyCode ].wasPressedThisFrame ) SetResource( resource );
 			}
+		}
+
+
+		public void SetWorldPointTransforms( int resourceIndex, Transform[] transforms )
+		{
+			if( resourceIndex >= _resources.Length ) return;
+
+			_resources[ resourceIndex ].worldPointTransforms = transforms;
 		}
 
 
@@ -53,6 +68,7 @@ namespace TrackingTools.AzureKinect
 		{
 			_textureProvider.sensorIndex = resource.sensorIndex;
 			_extrinsicsSaver.extrinsicsFileName = resource.extrinsicsFileName;
+			_cameraEstimator.SetWorldPointTransforms( resource.worldPointTransforms );
 			_cameraEstimator.SetPhysicalCameraIntrinsicsFileName( resource.physicalCameraIntrinsicsFileName );
 			_cameraEstimator.SetCalibrationPointFileName( resource.calibrationPointsFileName );
 		}
