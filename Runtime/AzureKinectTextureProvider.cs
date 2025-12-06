@@ -53,6 +53,9 @@ namespace TrackingTools.AzureKinect
 
 		bool process => _undistort || _flipVertically;
 
+
+		public Stream stream => _stream;
+
 		/// <summary>
 		/// Number of frames counted since last Unity update.
 		/// </summary>
@@ -101,6 +104,15 @@ namespace TrackingTools.AzureKinect
 			public static readonly int _MinDepth = Shader.PropertyToID( nameof( _MinDepth ) );
 			public static readonly int _MaxDepth = Shader.PropertyToID( nameof( _MaxDepth ) );
 			public static readonly int _DepthMap = Shader.PropertyToID( nameof( _DepthMap ) );
+		}
+
+
+		public int GetActiveSensorCount()
+		{
+			var kinectManager = KinectManager.Instance;
+			if( !kinectManager ) return 0;
+
+			return kinectManager.GetSensorCount();
 		}
 
 
@@ -174,7 +186,7 @@ namespace TrackingTools.AzureKinect
 		{
 			KinectManager kinectManager = KinectManager.Instance;
 			if( !kinectManager || !kinectManager.IsInitialized() || !kinectManager.IsDepthSensorsStarted() ) return;
-			
+
 			if( _sensorIndex >= kinectManager.GetSensorCount() ) {
 				Debug.LogWarning( logPrepend + "Sensor index " + _sensorIndex + " out of range. " + kinectManager.GetSensorCount() + " sensor(s) are connected.\n" );
 				return;

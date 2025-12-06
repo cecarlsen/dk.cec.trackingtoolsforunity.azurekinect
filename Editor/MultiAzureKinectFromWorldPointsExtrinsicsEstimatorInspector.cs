@@ -13,12 +13,14 @@ namespace TrackingTools.AzureKinect
 	{
 		SerializedProperty _textureProviderProp;
 		SerializedProperty _resourcesProp;
+		SerializedProperty _onEnableResourceIndexProp;
 
 
 		void OnEnable()
 		{
 			_textureProviderProp = serializedObject.FindProperty( "_textureProvider" );
 			_resourcesProp = serializedObject.FindProperty( "_resources" );
+			_onEnableResourceIndexProp = serializedObject.FindProperty( "_onEnableResourceIndex" );
 		}
 
 
@@ -31,6 +33,7 @@ namespace TrackingTools.AzureKinect
 			EditorGUI.BeginDisabledGroup( Application.isPlaying );
 			EditorGUILayout.PropertyField( _textureProviderProp );
 			EditorGUILayout.PropertyField( _resourcesProp );
+			EditorGUILayout.PropertyField( _onEnableResourceIndexProp );
 			EditorGUI.EndDisabledGroup();
 
 			serializedObject.ApplyModifiedProperties();
