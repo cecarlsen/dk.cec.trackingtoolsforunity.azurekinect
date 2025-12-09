@@ -20,8 +20,10 @@ namespace TrackingTools.AzureKinect
 		[SerializeField] Stream _stream = Stream.Color;
 
 		// Parameters.
+		[SerializeField] bool _preFlipY = false;
 		[SerializeField] bool _undistort = false;
-		[SerializeField] bool _flipVertically = false;
+		[SerializeField] bool _postFlipY = false;
+		//[SerializeField] bool _flipHorizontally = false;
 
 		// Events.
 		[SerializeField] UnityEvent<Texture> _latestTextureEvent = new UnityEvent<Texture>();
@@ -51,7 +53,7 @@ namespace TrackingTools.AzureKinect
 		const double microSeconsToSeconds = 0.0000001d;
 
 
-		bool process => _undistort || _flipVertically;
+		bool process => _undistort || _preFlipY;// || _flipHorizontally;
 
 
 		public Stream stream => _stream;
@@ -343,7 +345,7 @@ namespace TrackingTools.AzureKinect
 				if( _depthSourceTexture ) _depthSourceTexture.Release();
 				_depthSourceTexture = new RenderTexture( w, h, 0, RenderTextureFormat.RFloat );
 				_depthSourceTexture.name = "KinectDepth (" + _sensorIndex + ")";
-				_depthSourceTexture.filterMode = _depthSourceTexture ? FilterMode.Point : FilterMode.Bilinear; // Don't interpolate depth values.
+				_depthSourceTexture.filterMode = FilterMode.Point; // Don't interpolate depth values.
 			}
 
 			// Ensure that sensor data has a depthImageBuffer and set it's content.
@@ -366,7 +368,7 @@ namespace TrackingTools.AzureKinect
 			Graphics.Blit( null, _depthSourceTexture, _renderDepthTextureMaterial );
 
 			if( process ){
-				if( !_textures[ 0 ] ) {
+				if( !_textures[ 0 ] || _textures[ 0 ] == _depthSourceTexture ) {
 					_textures[ 0 ] = new RenderTexture( w, h, 0, _depthSourceTexture.graphicsFormat );
 					_textures[ 0 ].name = "KinectDepthProcessed (" + _sensorIndex + ")";
 				}
@@ -376,7 +378,10 @@ namespace TrackingTools.AzureKinect
 
 			if( process ) Process( _depthSourceTexture );
 
-			if( !process ) _textures[ 0 ] = _depthSourceTexture;
+			if( !process ){
+				if( _textures[ 0 ] && _textures[ 0 ] != _depthSourceTexture && _textures[ 0 ] is RenderTexture ) (_textures[ 0 ] as RenderTexture ).Release();
+				_textures[ 0 ] = _depthSourceTexture;
+			}
 
 			_previousFrameTimeMicroSeconds = _latestFrameTimeMicroSeconds;
 			_latestFrameTimeMicroSeconds = sensorData.lastDepthFrameTime;
@@ -391,11 +396,10 @@ namespace TrackingTools.AzureKinect
 		{
 			var targetTexture = _textures[ 0 ] as RenderTexture;
 			if( _undistort ) {
-				_lensUndistorter.Undistort( sourceTexture, targetTexture, isTextureAxisYFlipped: true ); // We know that the input texture from AxureKinectExample is flipped to begin with.
-				if( _flipVertically ) flipper.FlipVertically( targetTexture );
-
-			} else if( _flipVertically ) {
-				flipper.FlipVertically( sourceTexture, targetTexture );
+				_lensUndistorter.Undistort( sourceTexture, targetTexture, _preFlipY, _postFlipY ); // We know that the input texture from AxureKinectExample is flipped to begin with.
+				//if( _flipVertically || _flipHorizontally ) flipper.Flip( targetTexture, _flipVertically, _flipHorizontally );
+			} else if( _preFlipY && _postFlipY != _preFlipY ){// || _flipHorizontally ) {
+				flipper.Flip( sourceTexture, targetTexture );
 			}
 		}
 

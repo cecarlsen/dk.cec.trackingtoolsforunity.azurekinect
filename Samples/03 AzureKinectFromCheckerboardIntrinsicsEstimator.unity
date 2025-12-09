@@ -130,7 +130,11 @@ PrefabInstance:
     - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: _checkerboard
       value: 
-      objectReference: {fileID: 11400000, guid: dada8e8f2fd5ae640883871bbb2b5fc3, type: 2}
+      objectReference: {fileID: 11400000, guid: 7fc5afb9678acb040a4b45c31d7d09af, type: 2}
+    - target: {fileID: 1320722533865885984, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
+      propertyPath: _intrinsicsFileName
+      value: FemtoBoltIntrinsics_Infrared_640x576
+      objectReference: {fileID: 0}
     - target: {fileID: 3003002446927682914, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
       propertyPath: m_Name
       value: CameraFromCheckerboardIntrinsicsEstimatorSetup
@@ -175,10 +179,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1320722533571922499, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1320722533571922496, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 108643673}
   m_SourcePrefab: {fileID: 100100000, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
 --- !u!114 &108643671 stripped
 MonoBehaviour:
@@ -191,6 +199,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1e369e1ee40add4883992ffe94df2c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &108643672 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1320722533571922496, guid: 3d99e0ea970c1c64ba6a6ed13a64ad6c, type: 3}
+  m_PrefabInstance: {fileID: 108643670}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &108643673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108643672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.UI.InputSystemUIInputModule
+  m_SendPointerHoverToParent: 1
+  m_MoveRepeatDelay: 0.5
+  m_MoveRepeatRate: 0.1
+  m_XRTrackingOrigin: {fileID: 0}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_DeselectOnBackgroundClick: 1
+  m_PointerBehavior: 0
+  m_CursorLockBehavior: 0
+  m_ScrollDeltaPerTick: 6
 --- !u!1 &123339770
 GameObject:
   m_ObjectHideFlags: 0
@@ -237,7 +281,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _frameHistoryCapacity: 1
   _sensorId: 0
-  _stream: 0
+  _stream: 1
   _flipVertically: 1
   _undistort: 0
   _convertToR8: 0
@@ -291,7 +335,7 @@ MonoBehaviour:
   bIgnoreZCoordinates: 0
   bIgnoreInferredJoints: 0
   colorCameraMode: 1
-  depthCameraMode: 3
+  depthCameraMode: 2
   cameraFPS: 2
   deviceSyncMode: 0
   subDeviceDelayUsec: 0
@@ -370,6 +414,7 @@ MonoBehaviour:
   getInfraredFrames: 1
   getPoseFrames: 0
   getBodyFrames: 0
+  pollFramesInThread: 1
   syncDepthAndColor: 0
   syncBodyAndDepth: 0
   minUserDistance: 0

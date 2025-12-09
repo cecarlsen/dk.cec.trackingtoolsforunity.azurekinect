@@ -1,5 +1,5 @@
 /*
-	Copyright © Carl Emil Carlsen 2023-2024
+	Copyright Â© Carl Emil Carlsen 2023-2025
 	http://cec.dk
 */
 
@@ -17,7 +17,9 @@ namespace TrackingTools.AzureKinect
 		SerializedProperty _streamProp;
 		SerializedProperty _undistortProp;
 		SerializedProperty _frameHistoryCapacityProp;
-		SerializedProperty _flipVerticallyProp;
+		SerializedProperty _preFlipYProp;
+		SerializedProperty _postFlipYProp;
+		//SerializedProperty _flipHorizontallyProp;
 		SerializedProperty _latestTextureEventProp;
 		SerializedProperty _depthRangeEventProp;
 
@@ -51,7 +53,9 @@ namespace TrackingTools.AzureKinect
 			_streamProp = serializedObject.FindProperty( "_stream" );
 			_undistortProp = serializedObject.FindProperty( "_undistort" );
 			_frameHistoryCapacityProp = serializedObject.FindProperty( "_frameHistoryCapacity" );
-			_flipVerticallyProp = serializedObject.FindProperty( "_flipVertically" );
+			_preFlipYProp = serializedObject.FindProperty( "_preFlipY" );
+			_postFlipYProp = serializedObject.FindProperty( "_postFlipY" );
+			//_flipHorizontallyProp = serializedObject.FindProperty( "_flipHorizontally" );
 			_latestTextureEventProp = serializedObject.FindProperty( "_latestTextureEvent" );
 			_depthRangeEventProp = serializedObject.FindProperty( "_depthRangeEvent" );
 
@@ -74,8 +78,10 @@ namespace TrackingTools.AzureKinect
 
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField( "Parameters", EditorStyles.boldLabel );
+			EditorGUILayout.PropertyField( _preFlipYProp );
 			EditorGUILayout.PropertyField( _undistortProp );
-			EditorGUILayout.PropertyField( _flipVerticallyProp );
+			EditorGUILayout.PropertyField( _postFlipYProp );
+			//EditorGUILayout.PropertyField( _flipHorizontallyProp );
 
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField( "Events", EditorStyles.boldLabel );
