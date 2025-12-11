@@ -15,6 +15,7 @@ namespace TrackingTools.AzureKinect
 	{
 		SerializedProperty _sensorIndexProp;
 		SerializedProperty _streamProp;
+		SerializedProperty _intrinsicsFileNameProp;
 		SerializedProperty _undistortProp;
 		SerializedProperty _frameHistoryCapacityProp;
 		SerializedProperty _preFlipYProp;
@@ -22,6 +23,7 @@ namespace TrackingTools.AzureKinect
 		//SerializedProperty _flipHorizontallyProp;
 		SerializedProperty _latestTextureEventProp;
 		SerializedProperty _depthRangeEventProp;
+		SerializedProperty _intrinsicsEventProp;
 
 		AzureKinectTextureProvider _provider;
 
@@ -51,6 +53,7 @@ namespace TrackingTools.AzureKinect
 
 			_sensorIndexProp = serializedObject.FindProperty( "_sensorIndex" );
 			_streamProp = serializedObject.FindProperty( "_stream" );
+			_intrinsicsFileNameProp = serializedObject.FindProperty( "_intrinsicsFileName" );
 			_undistortProp = serializedObject.FindProperty( "_undistort" );
 			_frameHistoryCapacityProp = serializedObject.FindProperty( "_frameHistoryCapacity" );
 			_preFlipYProp = serializedObject.FindProperty( "_preFlipY" );
@@ -58,6 +61,7 @@ namespace TrackingTools.AzureKinect
 			//_flipHorizontallyProp = serializedObject.FindProperty( "_flipHorizontally" );
 			_latestTextureEventProp = serializedObject.FindProperty( "_latestTextureEvent" );
 			_depthRangeEventProp = serializedObject.FindProperty( "_depthRangeEvent" );
+			_intrinsicsEventProp = serializedObject.FindProperty( "_intrinsicsEvent" );
 
 			_provider = target as AzureKinectTextureProvider;
 		}
@@ -73,6 +77,7 @@ namespace TrackingTools.AzureKinect
 
 			EditorGUI.BeginDisabledGroup( Application.isPlaying );
 			EditorGUILayout.PropertyField( _streamProp );
+			EditorGUILayout.PropertyField( _intrinsicsFileNameProp );
 			EditorGUILayout.PropertyField( _frameHistoryCapacityProp );
 			EditorGUI.EndDisabledGroup();
 
@@ -89,6 +94,7 @@ namespace TrackingTools.AzureKinect
 			if( ( (AzureKinectTextureProvider.Stream) _streamProp.enumValueIndex ) == AzureKinectTextureProvider.Stream.Depth ) {
 				EditorGUILayout.PropertyField( _depthRangeEventProp );
 			}
+			EditorGUILayout.PropertyField( _intrinsicsEventProp );
 			
 			serializedObject.ApplyModifiedProperties();
 

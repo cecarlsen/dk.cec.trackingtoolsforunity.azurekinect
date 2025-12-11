@@ -10,10 +10,10 @@ using com.rfilkov.kinect;
 using OpenCVForUnity.CoreModule;
 using System.Runtime.InteropServices;
 using OpenCVForUnity.UnityUtils;
-using OpenCVForUnity.UtilsModule;
 using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.Calib3dModule;
 using static com.rfilkov.kinect.KinectInterop;
+using OpenCVForUnity.UnityIntegration;
 
 namespace TrackingTools.AzureKinect
 {
@@ -24,8 +24,9 @@ namespace TrackingTools.AzureKinect
 		[SerializeField] Stream _stream = Stream.Color;
 
 		// Parameters
-		[SerializeField] bool _flipVertically = false;
+		//[SerializeField] bool _preFlipY = false;
 		[SerializeField] bool _undistort = false;
+		[SerializeField] bool _postFlipY = false;
 		[SerializeField] bool _convertToR8 = false;
 		[SerializeField,Range(0f,50f)] float _infrared16BitScalar = 25f;
 
@@ -232,7 +233,7 @@ namespace TrackingTools.AzureKinect
 				_convertMat?.Dispose();
 				_convertMat = new Mat( h, w, CvType.CV_8UC4 );
 			}
-			if( ( _convertToR8 || _undistort || _flipVertically ) && ( _sourceMat == null || _sourceMat.width() != w || _sourceMat.height() != h || _sourceMat.type() != cvType ) ) {
+			if( ( _convertToR8 || _undistort || _postFlipY ) && ( _sourceMat == null || _sourceMat.width() != w || _sourceMat.height() != h || _sourceMat.type() != cvType ) ) {
 				_sourceMat?.Dispose();
 				_sourceMat = new Mat( h, w, cvType );
 			}
@@ -251,21 +252,21 @@ namespace TrackingTools.AzureKinect
 			// The incoming texture is flipped vertically, and that is exactly what OpenCV expects. But we may want to flip it after processing.
 			if( _undistort )
 			{
-				Utils.texture2DToMat( colorTexture, _convertToR8 ? _convertMat : _sourceMat, flip: false ); // was flipAfter
+				OpenCVMatUtils.Texture2DToMat( colorTexture, _convertToR8 ? _convertMat : _sourceMat, flip: false ); // was flipAfter
 				if( _convertToR8 ) TrackingToolsHelper.ColorMatToLumanceMat( _convertMat, _sourceMat );
 				Imgproc.remap( _sourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
-				Utils.matToTexture2DRaw( _undistortTargetMat, _textures[ 0 ], _flipVertically );
+				OpenCVMatUtils.MatToTexture2DRaw( _undistortTargetMat, _textures[ 0 ], _postFlipY );
 
 			} else if( _convertToR8 ){
 
-				Utils.texture2DToMat( colorTexture, _convertMat, flip: false ); // was flipAfter
+				OpenCVMatUtils.Texture2DToMat( colorTexture, _convertMat, flip: false );
 				TrackingToolsHelper.ColorMatToLumanceMat( _convertMat, _sourceMat );
-				Utils.matToTexture2DRaw( _sourceMat, _textures[ 0 ], _flipVertically );
+				OpenCVMatUtils.MatToTexture2DRaw( _sourceMat, _textures[ 0 ], _postFlipY );
 
-			} else if( _flipVertically ){
-
-				Utils.texture2DToMat( colorTexture, _sourceMat, flip: false ); // was flipAfter
-				Utils.matToTexture2DRaw( _sourceMat, _textures[ 0 ], _flipVertically );
+			} else if( _postFlipY ){
+				
+				OpenCVMatUtils.Texture2DToMat( colorTexture, _sourceMat, flip: false );
+				OpenCVMatUtils.MatToTexture2DRaw( _sourceMat, _textures[ 0 ], _postFlipY );
 
 			} else {
 
@@ -306,7 +307,7 @@ namespace TrackingTools.AzureKinect
 				_convertMat?.Dispose();
 				_convertMat = new Mat( h, w, CvType.CV_16U );
 			}
-			if( ( _undistort || _convertToR8 || _flipVertically ) && ( _sourceMat == null || _sourceMat.width() != w || _sourceMat.height() != h || _sourceMat.type() != cvType ) ) {
+			if( ( _undistort || _convertToR8 || _postFlipY ) && ( _sourceMat == null || _sourceMat.width() != w || _sourceMat.height() != h || _sourceMat.type() != cvType ) ) {
 				_sourceMat?.Dispose();
 				_sourceMat = new Mat( h, w, cvType );
 			}
@@ -322,11 +323,12 @@ namespace TrackingTools.AzureKinect
 			}
 
 			// Process.
-			if( _undistort || _convertToR8 ||_flipVertically )
+			if( _undistort || _convertToR8 || _postFlipY )
 			{		
 				// Copy to mat.
 				GCHandle arrayHandle = GCHandle.Alloc( rawImageData, GCHandleType.Pinned );
-				MatUtils.copyToMat( arrayHandle.AddrOfPinnedObject(), _convertToR8 ? _convertMat : _sourceMat );
+				
+				OpenCVMatUtils.CopyToMat( arrayHandle.AddrOfPinnedObject(), _convertToR8 ? _convertMat : _sourceMat );
 				arrayHandle.Free();
 
 				// Convert.
@@ -336,7 +338,7 @@ namespace TrackingTools.AzureKinect
 				if( _undistort ) Imgproc.remap( _sourceMat, _undistortTargetMat, _undistortMapX, _undistortMapY, Imgproc.INTER_LINEAR );
 
 				// Copy to texture.
-				Utils.matToTexture2DRaw( _undistort ? _undistortTargetMat : _sourceMat, _textures[ 0 ], _flipVertically );
+				OpenCVMatUtils.MatToTexture2DRaw( _undistort ? _undistortTargetMat : _sourceMat, _textures[ 0 ], _postFlipY );
 				
 			} else {
 

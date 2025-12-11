@@ -1,5 +1,5 @@
 /*
-	Copyright © Carl Emil Carlsen 2023
+	Copyright © Carl Emil Carlsen 2023-2025
 	http://cec.dk
 */
 
@@ -10,16 +10,31 @@ namespace TrackingTools.AzureKinect
 {
 	public class AzureKinectIntrinsicsExtractor : MonoBehaviour
 	{
-		[SerializeField] string _colorIntrinsicsSaveName = "KinectAzureIntrinsics_Color";
-		[SerializeField] string _depthIntrinsicsSaveName = "KinectAzureIntrinsics_Depth";
+		[SerializeField] string _colorIntrinsicsSaveName = "KinectAzureFactoryIntrinsics";
+		[SerializeField] string _depthIntrinsicsSaveName = "KinectAzureFactoryIntrinsics";
+		[SerializeField,Range(0,7)] int _sensorIndex = 0;
+
+		static readonly string logPrepend = $"<b>[{nameof(AzureKinectIntrinsicsExtractor)}]</b>";
 
 
 		void Update()
 		{
-			KinectManager kinectManager = KinectManager.Instance;
+			var kinectManager = KinectManager.Instance;
 			if( !kinectManager || !kinectManager.IsInitialized() ) return;
+
+			int sensorCount = kinectManager.GetSensorCount();
+			if( _sensorIndex >= sensorCount ){
+				Debug.LogWarning( $"{logPrepend} Aborting. Sensor index is out of range. Sensor count: {kinectManager.GetSensorCount()}.\n" );
+				enabled = false;
+				return;
+			}
 		
-			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( sensorIndex: 0 );
+			var sensorData = kinectManager.GetSensorData( _sensorIndex );
+			if( sensorData == null ){
+				Debug.LogWarning( $"{logPrepend} Aborting. SensorData is null.\n" );
+				enabled = false;
+				return;
+			}
 
 			Intrinsics colorIntrinsics = new Intrinsics();
 			Intrinsics depthIntrinsics = new Intrinsics();
@@ -33,18 +48,18 @@ namespace TrackingTools.AzureKinect
 
 			string colorIntrinsicsSaveName = _colorIntrinsicsSaveName;
 			string depthIntrinsicsSaveName = _depthIntrinsicsSaveName;
+
+			colorIntrinsicsSaveName += $"_D{sensorData.sensorId}_Color";
+			depthIntrinsicsSaveName += $"_D{sensorData.sensorId}_Depth";
+
 			if( sensorData.sensorInterface is Kinect4AzureInterface ) {
 				var kinectInterface = sensorData.sensorInterface as Kinect4AzureInterface;
-				var colorCameraMode = kinectInterface.colorCameraMode;
-				var depthCameraMode = kinectInterface.depthCameraMode;
-				colorIntrinsicsSaveName += colorCameraMode;
-				depthIntrinsicsSaveName += depthCameraMode;
+				colorIntrinsicsSaveName += kinectInterface.colorCameraMode;
+				depthIntrinsicsSaveName += kinectInterface.depthCameraMode;
 			} else if( sensorData.sensorInterface is RealSenseInterface ) {
 				var realsenseInterface = sensorData.sensorInterface as RealSenseInterface;
-				var colorCameraMode = realsenseInterface.colorCameraMode;
-				var depthCameraMode = realsenseInterface.depthCameraMode;
-				colorIntrinsicsSaveName += colorCameraMode;
-				depthIntrinsicsSaveName += depthCameraMode;
+				colorIntrinsicsSaveName += realsenseInterface.colorCameraMode;
+				depthIntrinsicsSaveName += realsenseInterface.depthCameraMode;
 			}
 
 			string colorFilePath = colorIntrinsics.SaveToFile( colorIntrinsicsSaveName );
@@ -52,7 +67,7 @@ namespace TrackingTools.AzureKinect
 
 			enabled = false;
 
-			Debug.Log( "Depth and color intrinsics saved at paths:\n" + colorFilePath + "\n" + depthFilePath );
+			Debug.Log( $"{logPrepend} Depth and color intrinsics saved at paths:\n{colorFilePath}\n{depthFilePath}" );
 		}
 	}
 }

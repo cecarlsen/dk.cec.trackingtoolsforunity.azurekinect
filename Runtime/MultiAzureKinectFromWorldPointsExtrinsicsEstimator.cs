@@ -82,6 +82,14 @@ namespace TrackingTools.AzureKinect
 		}
 
 
+		public void SetIntrinsicsFileName( int resourceIndex, string fileName )
+		{
+			if( resourceIndex >= _resources.Length ) return;
+
+			_resources[ resourceIndex ].physicalCameraIntrinsicsFileName = fileName;
+		}
+
+
 		void SetActiveResource( int resourceIndex )
 		{
 			Resource resource = _resources[ resourceIndex ];
@@ -103,7 +111,7 @@ namespace TrackingTools.AzureKinect
 			var extrinsics = new Extrinsics();
 			extrinsics.UpdateFromTransform( _cameraEstimator.virtualCamera.transform );
 			string filePath = extrinsics.SaveToFile( resource.extrinsicsFileName );
-			Debug.Log( $"{logPrepend} Updated intrinsics for sensor index {resource.sensorIndex}.\n" );
+			Debug.Log( $"{logPrepend} Updated intrinsics for sensor index {resource.sensorIndex}.\n{filePath}" );
 		}
 	}
 }

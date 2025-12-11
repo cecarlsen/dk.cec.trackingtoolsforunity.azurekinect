@@ -18,6 +18,7 @@ namespace TrackingTools.AzureKinect
 		// Setup.
 		[SerializeField] int _sensorIndex = 0;
 		[SerializeField] Stream _stream = Stream.Color;
+		[SerializeField,Tooltip("Used for undistortion. If not set, then the factory intrinsics is used.")] string _intrinsicsFileName = string.Empty;
 
 		// Parameters.
 		[SerializeField] bool _preFlipY = false;
@@ -28,6 +29,7 @@ namespace TrackingTools.AzureKinect
 		// Events.
 		[SerializeField] UnityEvent<Texture> _latestTextureEvent = new UnityEvent<Texture>();
 		[SerializeField] UnityEvent<Vector2> _depthRangeEvent = new UnityEvent<Vector2>();
+		[SerializeField,Tooltip("Focal length, sensor size, lens shift.")] UnityEvent<float,Vector2,Vector2> _intrinsicsEvent = new UnityEvent<float,Vector2,Vector2>();
 
 		ulong _latestFrameTimeMicroSeconds;		// Not aligned with Unity time.
 		ulong _previousFrameTimeMicroSeconds;	// Not aligned with Unity time.
@@ -43,6 +45,8 @@ namespace TrackingTools.AzureKinect
 		RenderTexture _depthSourceTexture;
 		Texture2D _infraredSourceTexture;
 		byte[] _rawImageDataBytes;
+
+		bool _isIntrinsicsLoaded;
 
 		LensUndistorter _lensUndistorter;
 
@@ -150,6 +154,12 @@ namespace TrackingTools.AzureKinect
 		}
 
 
+		public void SetIntrinsicsFileName( string fileName )
+		{
+			_intrinsicsFileName = fileName;
+		}
+
+
 		/*
 		public override int GetHistoryFrameIndexAtDelayTime( float delayFromUnityNow )
 		{
@@ -186,12 +196,24 @@ namespace TrackingTools.AzureKinect
 
 		void Update()
 		{
-			KinectManager kinectManager = KinectManager.Instance;
+			// Checks.
+			var kinectManager = KinectManager.Instance;
 			if( !kinectManager || !kinectManager.IsInitialized() || !kinectManager.IsDepthSensorsStarted() ) return;
-
 			if( _sensorIndex >= kinectManager.GetSensorCount() ) {
-				Debug.LogWarning( logPrepend + "Sensor index " + _sensorIndex + " out of range. " + kinectManager.GetSensorCount() + " sensor(s) are connected.\n" );
+				Debug.LogWarning( $"{logPrepend} Sensor index {_sensorIndex} out of range. {kinectManager.GetSensorCount()} sensor(s) are connected.\n" );
 				return;
+			}
+
+			// Get the sensor data.
+			var sensorData = kinectManager.GetSensorData( _sensorIndex );
+
+			// Get and send out intrinsics once.
+			if( !_isIntrinsicsLoaded ){
+				var intrinsics = new Intrinsics();
+				intrinsics.UpdateFromAzureKinectExamples( _stream == Stream.Color ? sensorData.colorCamIntr : sensorData.depthCamIntr );
+				const float focalLength = 50; // Fixed.
+				_intrinsicsEvent.Invoke( focalLength, intrinsics.GetDerivedSensorSize( focalLength ), intrinsics.lensShift );
+				_isIntrinsicsLoaded = true;
 			}
 
 			// Ensure we have a frame history.
@@ -215,9 +237,6 @@ namespace TrackingTools.AzureKinect
 					break;
 			}
 
-			// Get the sensor data.
-			KinectInterop.SensorData sensorData = kinectManager.GetSensorData( _sensorIndex );
-
 			// Update texture.
 			bool hasNewFrame = false;
 			switch( _stream )
@@ -227,6 +246,7 @@ namespace TrackingTools.AzureKinect
 				case Stream.Depth: hasNewFrame = UpdateDepthTexture( kinectManager, sensorData ); break;
 			}
 
+			// Output.
 			if( hasNewFrame ) {
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
@@ -408,7 +428,13 @@ namespace TrackingTools.AzureKinect
 		{
 			if( _lensUndistorter == null ){
 				Intrinsics intrinsics = new Intrinsics();
-				intrinsics.UpdateFromAzureKinectExamples( rfilkovIntrinsics );
+				if( !string.IsNullOrEmpty( _intrinsicsFileName ) ){
+					if( !Intrinsics.TryLoadFromFile( _intrinsicsFileName, out intrinsics )){
+						Debug.LogWarning( $"{logPrepend} Failed to load intrinsics file '{_intrinsicsFileName}'.\n");
+					}
+				} else {
+					intrinsics.UpdateFromAzureKinectExamples( rfilkovIntrinsics );
+				}
 				_lensUndistorter = new LensUndistorter( intrinsics );
 			}
 		}
