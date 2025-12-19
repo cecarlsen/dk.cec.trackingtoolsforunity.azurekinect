@@ -315,7 +315,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _colorIntrinsicsSaveName: FemtoBoltFactoryIntrinsics
   _depthIntrinsicsSaveName: FemtoBoltFactoryIntrinsics
-  _sensorIndex: 3
+  _sensorIndex: 5
 --- !u!1 &1053695844
 GameObject:
   m_ObjectHideFlags: 0
@@ -332,7 +332,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1053695845
 Transform:
   m_ObjectHideFlags: 0
@@ -557,7 +557,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1899083043
 Transform:
   m_ObjectHideFlags: 0

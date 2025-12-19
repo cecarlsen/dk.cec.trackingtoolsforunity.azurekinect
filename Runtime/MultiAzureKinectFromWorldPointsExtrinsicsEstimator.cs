@@ -31,6 +31,7 @@ namespace TrackingTools.AzureKinect
 			public string physicalCameraIntrinsicsFileName = "DefaultCamera";
 			public string calibrationPointsFileName = "DefaultPoints";
 			public string extrinsicsFileName = "Default";
+			public Transform extrinsicGuessTransform = null;
 			public Transform[] worldPointTransforms = null;
 			[Tooltip("Position and location used if no extrinsics exists.")] public Transform defaultCameraTransform = null;
 			public Key hotKeyCode = Key.Digit1;
@@ -97,6 +98,7 @@ namespace TrackingTools.AzureKinect
 			_textureProvider.sensorIndex = resource.sensorIndex;
 			_extrinsicsSaver.extrinsicsFileName = resource.extrinsicsFileName;
 			if( resource.defaultCameraTransform ) _cameraEstimator.virtualCamera.transform.SetPositionAndRotation( resource.defaultCameraTransform.position, resource.defaultCameraTransform.rotation );
+			if( resource.extrinsicGuessTransform ) _cameraEstimator.extrinsicGuessTransform = resource.extrinsicGuessTransform;
 			_cameraEstimator.SetWorldPointTransforms( resource.worldPointTransforms );
 			_cameraEstimator.SetPhysicalCameraIntrinsicsFileName( resource.physicalCameraIntrinsicsFileName );
 			_cameraEstimator.SetCalibrationPointFileName( resource.calibrationPointsFileName );
