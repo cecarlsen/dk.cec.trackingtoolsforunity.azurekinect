@@ -689,7 +689,7 @@ MonoBehaviour:
   playbackPosSeconds: -1
   loopPlayback: 0
   bodyTrackingSensorOrientation: 0
-  bodyTrackingProcessingMode: 2
+  bodyTrackingProcessingMode: 0
   detectFloorForPoseEstimation: 0
 --- !u!1 &954572013
 GameObject:
@@ -765,8 +765,8 @@ MonoBehaviour:
   startDepthSensors: 1
   dontDestroyAcrossScenes: 0
   getDepthFrames: 1
-  getColorFrames: 2
-  getInfraredFrames: 1
+  getColorFrames: 0
+  getInfraredFrames: 2
   getPoseFrames: 0
   getBodyFrames: 0
   pollFramesInThread: 1
@@ -791,7 +791,7 @@ MonoBehaviour:
   displayImages: 02000000
   displayImageWidthPercent: 0.2
   statusInfoText: {fileID: 0}
-  consoleLogMessages: 0
+  consoleLogMessages: 1
   OnDepthSensorsStarted:
     m_PersistentCalls:
       m_Calls: []
@@ -865,9 +865,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _frameHistoryCapacity: 1
   _sensorIndex: 0
-  _stream: 0
+  _stream: 1
+  _intrinsicsFileName: FemtoBoltFactoryIntrinsics_DCL8F25300A2_Depth_640_x_576_30Fps_3_86mNfov
+  _preFlipY: 0
   _undistort: 0
-  _flipVertically: 0
+  _postFlipY: 0
   _latestTextureEvent:
     m_PersistentCalls:
       m_Calls:
@@ -885,6 +887,9 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   _depthRangeEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  _intrinsicsEvent:
     m_PersistentCalls:
       m_Calls: []
 --- !u!1 &1551283657
@@ -933,7 +938,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 1}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -983,7 +988,7 @@ Transform:
   m_GameObject: {fileID: 1551283657}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.727, z: -1.751}
+  m_LocalPosition: {x: 0, y: 0.727, z: -2.38}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1084,31 +1089,38 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactable: 0
+  _extrinsicGuessTransform: {fileID: 0}
   _worldPointTransforms:
   - {fileID: 510572914}
   - {fileID: 1841898623}
   - {fileID: 775975843}
   - {fileID: 1101535453}
   - {fileID: 1299694691}
+  _physicalScale: 0.1
   _physicalCameraTexture: {fileID: 0}
-  _isPhysicalCameraTextureFlipped: 1
-  _isPhysicalCameraTextureDistorted: 1
-  _physicalCameraIntrinsicsFileName: AzureKinectIntrinsics_Color_1280_x_720_30Fps
+  _preFlipPhysicalCameraTextureY: 1
+  _undistortPhysicalCameraTexture: 1
+  _physicalCameraIntrinsicsFileName: FemtoBoltFactoryIntrinsics_DCL8F25300A2_Depth_640_x_576_30Fps_3_86mNfov
   _calibrationPointsFileName: DefaultKinectExamplePoints
   _virtualCamera: {fileID: 1551283661}
-  _canvas: {fileID: 353565452}
+  _containerRect: {fileID: 954572014}
   _interactableHotKey: 1
   _resetHotKey: 65
+  _precisionHoldHotKey: 55
   _font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
   _fontSize: 12
   _virtualAlpha: 0.8
-  _physicalBrightness: 1
-  _containerUI: {fileID: 954572014}
+  _physicalBrightnessFactor: 1
+  _physicalBrightnessPow: 0.5
+  _pointIdleColor: {r: 0, g: 1, b: 1, a: 1}
+  _pointFocusedColor: {r: 1, g: 0, b: 1, a: 1}
+  _pointActiveColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   _drawGizmosAlways: 1
   _drawPointIndexLabelGizmos: 1
   _pointLabelOffset: {x: 0, y: 0, z: 0}
   _drawPointGizmos: 1
   _pointGizmoRadius: 0.005
+  _logWarnings: 0
 --- !u!1001 &6744535830364546580
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1120,6 +1132,14 @@ PrefabInstance:
     - target: {fileID: 821634709944804246, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_Name
       value: CircleAnchor
+      objectReference: {fileID: 0}
+    - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.7
       objectReference: {fileID: 0}
     - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1135,11 +1155,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_LocalRotation.y
@@ -1151,7 +1171,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 5428871747938717743, guid: b461ea027931dd8438e948954e0a0645, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y

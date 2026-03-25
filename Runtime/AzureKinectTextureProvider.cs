@@ -264,6 +264,7 @@ namespace TrackingTools.AzureKinect
 		{
 			if( sensorData == null || sensorData.lastColorFrameTime == _latestFrameTimeMicroSeconds ) return false;
 
+
 			if( _frameHistoryCapacity > 1 ) ShiftHistory();
 
 			Texture colorTexture = kinectManager.GetColorImageTex( _sensorIndex );
@@ -304,7 +305,7 @@ namespace TrackingTools.AzureKinect
 
 			int w = sensorData.depthImageWidth;
 			int h = sensorData.depthImageHeight;
-				
+			
 			// Create texture.
 			if( !_infraredSourceTexture ) {
 				int pixelCount = w * h;
