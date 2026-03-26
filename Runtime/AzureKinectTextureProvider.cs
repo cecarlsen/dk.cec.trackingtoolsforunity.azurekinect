@@ -149,7 +149,7 @@ namespace TrackingTools.AzureKinect
 		/// </summary>
 		public override double GetHistoryFrameTime( int historyIndex )
 		{
-			if( _frameTimes?.Length > historyIndex ) return _frameTimes[ historyIndex ];
+			if( _frameTimes?.Length > historyIndex && historyIndex >= 0 ) return _frameTimes[ historyIndex ];
 			return 0.0;
 		}
 
