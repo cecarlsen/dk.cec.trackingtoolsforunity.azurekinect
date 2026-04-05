@@ -1,5 +1,5 @@
 ﻿/*
-	Copyright © Carl Emil Carlsen 2023-2024
+	Copyright © Carl Emil Carlsen 2023-2026
 	http://cec.dk
 
 	Note that depth values are scaled to the range between kinectManager.GetSensorMinDistance( id ) and kinectManager.GetSensorMaxDistance( id ).
@@ -54,7 +54,7 @@ namespace TrackingTools.AzureKinect
 
 		static string logPrepend = "<b>[" + nameof( ExtrinsicsSaver ) + "]</b> ";
 
-		const double microSeconsToSeconds = 0.0000001d;
+		const double microSecondsToSeconds = 0.0000001d;
 
 
 		bool process => _undistort || _preFlipY;// || _flipHorizontally;
@@ -136,7 +136,6 @@ namespace TrackingTools.AzureKinect
 			if( _textures?.Length > historyIndex ) return _textures[ historyIndex ];
 			return null;
 		}
-
 
 		/// <summary>
 		/// Get latest frame time in seconds, measured relative to capture begin time. 
@@ -250,7 +249,8 @@ namespace TrackingTools.AzureKinect
 			if( hasNewFrame ) {
 				_latestFrameNum++;
 				_framesSinceLastUnityUpdate = 1;
-				_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSeconsToSeconds;
+				_frameTimes[ 0 ] = _latestFrameTimeMicroSeconds * microSecondsToSeconds;
+				_textures[ 0 ].IncrementUpdateCount();
 				//_latestFrameTimeUnity = Time.time;
 				if( _frameHistoryCapacity > 1 && _latestFrameNum > 1 ) _frameHistoryDuration += (float) ( _frameTimes[ 0 ] - _frameTimes[ 1 ] );
 				_latestTextureEvent.Invoke( GetLatestTexture() );
@@ -264,7 +264,6 @@ namespace TrackingTools.AzureKinect
 		{
 			if( sensorData == null || sensorData.lastColorFrameTime == _latestFrameTimeMicroSeconds ) return false;
 
-
 			if( _frameHistoryCapacity > 1 ) ShiftHistory();
 
 			Texture colorTexture = kinectManager.GetColorImageTex( _sensorIndex );
@@ -275,8 +274,9 @@ namespace TrackingTools.AzureKinect
 
 			if( process || _frameHistoryCapacity > 1 && !_textures[ 0 ] ) {
 				//_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, colorTexture.graphicsFormat );
-				_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, GraphicsFormat.R8G8B8A8_UNorm );
-				_textures[ 0 ].name = "KinectColorProcessed (" + _sensorIndex + ") " + frameHistoryCount;
+				_textures[ 0 ] = new RenderTexture( colorTexture.width, colorTexture.height, 0, GraphicsFormat.R8G8B8A8_UNorm ){
+					name = "KinectColorProcessed (" + _sensorIndex + ") " + frameHistoryCount
+				};
 			}
 
 			if( _undistort ) EnsureUndistortResources( sensorData.colorCamIntr );
@@ -309,8 +309,9 @@ namespace TrackingTools.AzureKinect
 			// Create texture.
 			if( !_infraredSourceTexture ) {
 				int pixelCount = w * h;
-				_infraredSourceTexture = new Texture2D( w, h, GraphicsFormat.R16_UNorm, TextureCreationFlags.None );
-				_infraredSourceTexture.name = "KinectIR (" + _sensorIndex + ")";
+				_infraredSourceTexture = new Texture2D( w, h, GraphicsFormat.R16_UNorm, TextureCreationFlags.None ){
+					name = "KinectIR (" + _sensorIndex + ")"
+				};
 				_rawImageDataBytes = new byte[ pixelCount * 2 ];
 			}
 
@@ -329,8 +330,9 @@ namespace TrackingTools.AzureKinect
 
 			var firstTexture = _textures[ 0 ];
 			if( process && !firstTexture ) {
-				firstTexture = new RenderTexture( w, h, 0, _infraredSourceTexture.graphicsFormat );
-				firstTexture.name = "KinectIRProcessed (" + _sensorIndex + ") " + frameHistoryCount;
+				firstTexture = new RenderTexture( w, h, 0, _infraredSourceTexture.graphicsFormat ){
+					name = "KinectIRProcessed (" + _sensorIndex + ") " + frameHistoryCount
+				};
 				_textures[ 0 ] = firstTexture;
 			}
 
@@ -364,9 +366,10 @@ namespace TrackingTools.AzureKinect
 			int h = kinectManager.GetDepthImageHeight( _sensorIndex );
 			if( !_depthSourceTexture || _depthSourceTexture.width != w || _depthSourceTexture.height != h ){
 				if( _depthSourceTexture ) _depthSourceTexture.Release();
-				_depthSourceTexture = new RenderTexture( w, h, 0, RenderTextureFormat.RFloat );
-				_depthSourceTexture.name = "KinectDepth (" + _sensorIndex + ")";
-				_depthSourceTexture.filterMode = FilterMode.Point; // Don't interpolate depth values.
+				_depthSourceTexture = new RenderTexture( w, h, 0, RenderTextureFormat.RFloat ){
+					name = "KinectDepth (" + _sensorIndex + ")",
+					filterMode = FilterMode.Point, // Don't interpolate depth values.
+				};
 			}
 
 			// Ensure that sensor data has a depthImageBuffer and set it's content.
@@ -390,8 +393,9 @@ namespace TrackingTools.AzureKinect
 
 			if( process ){
 				if( !_textures[ 0 ] || _textures[ 0 ] == _depthSourceTexture ) {
-					_textures[ 0 ] = new RenderTexture( w, h, 0, _depthSourceTexture.graphicsFormat );
-					_textures[ 0 ].name = "KinectDepthProcessed (" + _sensorIndex + ")";
+					_textures[ 0 ] = new RenderTexture( w, h, 0, _depthSourceTexture.graphicsFormat ){
+						name = "KinectDepthProcessed (" + _sensorIndex + ")"
+					};
 				}
 			}
 
