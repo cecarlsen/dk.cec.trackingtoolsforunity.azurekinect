@@ -207,7 +207,7 @@ namespace TrackingTools.AzureKinect
 			var sensorData = kinectManager.GetSensorData( _sensorIndex );
 
 			// Get and send out intrinsics once.
-			if( !_isIntrinsicsLoaded ){
+			if( !_isIntrinsicsLoaded && _intrinsicsEvent.GetPersistentEventCount() > 0 ){
 				var intrinsics = new Intrinsics();
 				intrinsics.UpdateFromAzureKinectExamples( _stream == Stream.Color ? sensorData.colorCamIntr : sensorData.depthCamIntr );
 				const float focalLength = 50; // Fixed.
