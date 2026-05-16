@@ -52,7 +52,7 @@ namespace TrackingTools.AzureKinect
 
 		static Flipper flipper;
 
-		static string logPrepend = "<b>[" + nameof( ExtrinsicsSaver ) + "]</b> ";
+		static string logPrepend = "<b>[" + nameof( AzureKinectTextureProvider ) + "]</b> ";
 
 		const double microSecondsToSeconds = 0.0000001d;
 
